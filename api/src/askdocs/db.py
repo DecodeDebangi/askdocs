@@ -46,6 +46,8 @@ create table if not exists answers (
     created_at  timestamptz not null default now()
 );
 create index if not exists answers_unanswered_idx on answers (created_at desc) where not answered;
+-- answered | escalated | no_sources | no_answer | error
+alter table answers add column if not exists reason text;
 """
 
 
@@ -73,9 +75,9 @@ def init_logs(pool: ConnectionPool) -> None:
 def log_answer(conn: psycopg.Connection, question: str, done: dict) -> None:
     """Every answer is stored, so the admin page can list the questions we couldn't answer."""
     conn.execute(
-        """insert into answers (question, answer, answered, cited, retrieve_ms, llm_ms)
-           values (%s, %s, %s, %s, %s, %s)""",
-        (question, done["answer"], done["answered"], done["cited"],
+        """insert into answers (question, answer, answered, reason, cited, retrieve_ms, llm_ms)
+           values (%s, %s, %s, %s, %s, %s, %s)""",
+        (question, done["answer"], done["answered"], done["reason"], done["cited"],
          done["timings"]["retrieve_ms"], done["timings"]["llm_ms"]),
     )
 

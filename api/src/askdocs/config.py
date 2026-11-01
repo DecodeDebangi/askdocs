@@ -22,6 +22,12 @@ LLM_MODEL = os.environ.get("LLM_MODEL", "qwen2.5:7b")
 PRODUCT_NAME = os.environ.get("PRODUCT_NAME", "Supabase")
 # Below this reranker score the best source is unrelated, so we hand off instead of answering.
 MIN_RERANK_SCORE = float(os.environ.get("MIN_RERANK_SCORE", "-6.0"))
+# Questions matching this go straight to a human: money and legal matters, where a
+# docs-based answer that is slightly off costs more than a short wait.
+ESCALATE_PATTERN = os.environ.get(
+    "ESCALATE_PATTERN",
+    r"\brefund|\bchargeback|money back|charged twice|double.charged|\bdispute\b|\blawsuit|\blawyer|legal action",
+)
 
 SITEMAP_URL = os.environ.get("SITEMAP_URL", "https://supabase.com/docs/sitemap.xml")
 URL_PREFIX = os.environ.get("URL_PREFIX", "https://supabase.com/docs/guides/")

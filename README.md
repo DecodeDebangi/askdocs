@@ -18,6 +18,7 @@ flowchart LR
   Q[question] --> H[hybrid search<br/>vector + keyword, RRF]
   DB --> H
   H --> R[rerank top 20<br/>MiniLM cross-encoder]
+  Q -->|refund, dispute, legal| X
   R -->|best score too low| X[hand off, no LLM call]
   R --> L[LLM answers from<br/>numbered sources]
   L -->|NO_ANSWER| X
@@ -29,31 +30,33 @@ flowchart LR
 - **Index:** Postgres with pgvector (HNSW, cosine) plus a weighted `tsvector` (title > section > body). Re-ingesting only re-embeds pages whose content changed, and swaps each page's chunks in a single transaction.
 - **Search:** keyword and vector search run together and are merged with Reciprocal Rank Fusion. Keyword search finds exact names like `supabase.auth.signUp`; vector search finds questions that use different words from the docs.
 - **Rerank:** a local cross-encoder re-scores the top 20 against the question. For "how do I stop users reading each other's rows", hybrid search ranked a Slack page first; the reranker puts Row Level Security first.
-- **Answer or hand off:** if the best source scores below `MIN_RERANK_SCORE`, the question is off-topic and is handed off without an LLM call. Otherwise the LLM answers from numbered sources and cites them like `[1]`, or replies `NO_ANSWER`, which is never shown to the user and also triggers a handoff. Every answer is logged to an `answers` table, so unanswered questions can be reviewed.
+- **Escalate:** questions about refunds, disputed charges or legal matters (`ESCALATE_PATTERN`) go straight to a human before any search.
+- **Answer or hand off:** if the best source scores below `MIN_RERANK_SCORE`, the question is off-topic and is handed off without an LLM call. Otherwise the LLM answers from numbered sources and cites them like `[1]`, or replies `NO_ANSWER`, which is never shown to the user and also triggers a handoff. Every answer is logged to an `answers` table with its reason (`answered`, `escalated`, `no_sources`, `no_answer` or `error`), so unanswered questions can be reviewed.
 - **LLM:** any OpenAI-compatible API (Ollama locally; Groq, Gemini, Claude or OpenAI in production), chosen with three environment variables.
 
 ## Results
 
-Measured on a hand-written set of 50 questions ([evals/supabase.jsonl](api/evals/supabase.jsonl)): 42 that the docs answer, each labelled with the pages that answer it and the facts a correct answer must contain, plus 8 the bot should refuse (off-topic, a prompt injection, a refund request).
+Measured on a hand-written set of 53 questions ([evals/supabase.jsonl](api/evals/supabase.jsonl)): 42 that the docs answer, each labelled with the pages that answer it and the facts a correct answer must contain, plus 11 the bot should refuse (off-topic, a prompt injection, refunds and disputed charges, a suspended account).
 
 | Metric | gemini-3.5-flash-lite |
 |---|---|
-| Answer accuracy (required facts present) | **93%** (39/42) |
+| Answer accuracy (required facts present) | **95%** (40/42) |
 | Cited a page that answers the question | 90% (38/42) |
-| Off-topic questions handed off | 88% (7/8) |
-| Answerable questions wrongly handed off | 5% (2/42) |
-| Correct page in top 5 sources | 98% (41/42) |
+| Questions it should refuse that were handed off | **100%** (11/11) |
+| Answerable questions wrongly handed off | 2% (1/42) |
+| Correct page in top 5 sources | 95% (40/42) |
 | Correct page ranked first | 71% (30/42) |
-| Response time p50 / p95 | 1.7 s / 3.0 s |
+| Response time p50 / p95 | 1.9 s / 3.1 s |
 
-Per-question results are in [runs/](api/runs/). An earlier run of the same setup scored 90%; answers vary by a question or two between runs.
+Per-question results are in [runs/](api/runs/). Answers vary by a question or two between runs.
 
-What the misses show:
-- **Over-generalizing:** asked "what's your refund policy?", it answered "we do not provide refunds", but the source only says unused *credits* are not refunded.
-- **Retrieval:** for "what chunk size should I use for resumable uploads?", the code sample that sets `chunkSize` was not retrieved, so the bot correctly declined to guess.
-- **Incomplete:** for a CORS error it said to handle preflight requests but didn't show the headers.
+How the numbers got here:
+1. **First run: 90%.** Building the eval found a bug that hand-testing hadn't: context assembly stopped at the first chunk shorter than 200 characters and dropped every source after it. Fixing it: **93%**.
+2. **Over-generalizing.** Asked "what's your refund policy?", the bot said "we do not provide refunds", but the source only says unused *credits* are not refunded. Two fixes: questions about refunds, disputed charges or legal matters now go straight to a human (`ESCALATE_PATTERN`, checked before any search), and the prompt forbids stating a rule more broadly than its source. Three new refusal questions were added so the fix isn't tuned to one question; one of them ("my account was suspended") has no escalation keyword, and the LLM correctly declined it. Result: **95%**, and all 11 refusals handed off.
 
-Building the eval found a bug that hand-testing hadn't: context assembly stopped at the first chunk shorter than 200 characters and dropped every source after it. Fixing it raised accuracy from 90% to 93%.
+Remaining misses:
+- **Retrieval:** for "what chunk size should I use for resumable uploads?", the code sample that sets `chunkSize` is not retrieved, so the bot correctly declines to guess.
+- **Incomplete:** for a CORS error it says to handle preflight requests but doesn't show the headers.
 
 ```bash
 uv run askdocs eval --retrieval-only        # search and gate only, ~30 s, no LLM

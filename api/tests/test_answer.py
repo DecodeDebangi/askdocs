@@ -90,6 +90,26 @@ def test_llm_error_shows_busy_message_without_handoff(monkeypatch):
     assert not done["answered"] and not done["handoff"]
 
 
+@pytest.mark.parametrize("question", [
+    "What's your refund policy?",
+    "I was charged twice, can I get my money back?",
+    "How do I dispute a charge on my invoice?",
+])
+def test_money_and_legal_questions_escalate_before_search(monkeypatch, question):
+    def boom(*_):
+        raise AssertionError("should not search or call the LLM")
+
+    monkeypatch.setattr(answer, "retrieve", boom)
+    monkeypatch.setattr(answer, "llm", boom)
+    done = list(answer_stream(None, question))[-1]
+    assert done["reason"] == "escalated" and done["handoff"]
+
+
+@pytest.mark.parametrize("question", ["How do I cancel my subscription?", "How are credits applied to my invoice?"])
+def test_billing_how_to_questions_are_not_escalated(question):
+    assert not answer.should_escalate(question)
+
+
 def test_no_relevant_sources_hands_off_without_calling_llm(monkeypatch):
     def boom():
         raise AssertionError("LLM should not be called")

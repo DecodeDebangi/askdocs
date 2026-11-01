@@ -3,16 +3,16 @@
   "min_rerank_score": -6.0,
   "summary": {
     "retrieval hit@1": "71% (30/42)",
-    "retrieval hit@5": "98% (41/42)",
-    "gate: off-topic handed off": "25% (2/8)",
+    "retrieval hit@5": "95% (40/42)",
+    "gate: off-topic handed off": "18% (2/11)",
     "gate: answerable wrongly handed off": "0% (0/42)",
-    "retrieval p50": "534 ms",
-    "answer accuracy (facts present)": "93% (39/42)",
+    "retrieval p50": "644 ms",
+    "answer accuracy (facts present)": "95% (40/42)",
     "cited a correct page": "90% (38/42)",
-    "unanswerable handed off": "88% (7/8)",
-    "answerable wrongly handed off": "5% (2/42)",
-    "end-to-end p50": "1.7 s",
-    "end-to-end p95": "3.0 s"
+    "unanswerable handed off": "100% (11/11)",
+    "answerable wrongly handed off": "2% (1/42)",
+    "end-to-end p50": "1.9 s",
+    "end-to-end p95": "3.1 s"
   },
   "results": [
     {
@@ -28,14 +28,14 @@
         "https://supabase.com/docs/guides/storage/production/scaling#limit-the-upload-size"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 824,
+      "retrieve_ms": 1588,
       "gold_rank": 1,
-      "answer": "For Free projects, the maximum global file size limit is 50 MB [1].",
+      "answer": "For Free projects, the maximum file size limit can't exceed 50 MB [1].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/storage/uploads/file-limits#global-file-size"
       ],
-      "total_ms": 1812,
+      "total_ms": 2494,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -52,15 +52,15 @@
         "https://supabase.com/docs/guides/database/tables#enabling-row-level-security"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 539,
+      "retrieve_ms": 1143,
       "gold_rank": 1,
-      "answer": "To stop users from reading each other's rows, use Row Level Security (RLS) in Postgres so that the database enforces authorization on every request [1]. \n\nFor example, on a table where each row belongs to a specific user (such as a `watchlists` table), you can enable RLS and create a policy that restricts users to reading and adding only their own rows using `auth.uid()` [2]:\n\n```sql\ncreate table watchlists (\n  id bigint generated always as identity primary key,\n  user_id uuid not null references auth.users default auth.uid(),\n  movie_id bigint not null references movies\n);\n\nalter table watchlists enable row level security;\n\ncreate policy \"Users can read their own watchlist\"\non watchlists for select\nto authenticated\nusing ( (select auth.uid()) = user_id );\n\ncreate policy \"Users can add to their own watchlist\"\non watchlists for insert\nto authenticated\nwith check ( (select auth.uid()) = user_id );\n```\n\nPostgres will apply this policy to every request made with publishable (`anon`) or user keys, preventing users from seeing data that does not belong to them [1].",
+      "answer": "To stop users from reading each other's rows, you can use Row Level Security (RLS) in Postgres [1][2]. RLS ensures that Postgres enforces access rules on every request made with your publishable (`anon`) or user keys, rather than relying on application-layer filtering [1].\n\nHere is how you can set it up for a table (such as a `watchlists` table where each row belongs to a specific user):\n\n1. Enable row level security on the table [2]:\n```sql\nalter table watchlists enable row level security;\n```\n\n2. Create a policy that restricts users to reading only their own rows [2]:\n```sql\ncreate policy \"Users can read their own watchlist\"\non watchlists for select\nto authenticated\nusing ( (select auth.uid()) = user_id );\n```\n\nThe secret (`service_role`) key bypasses RLS, so keep it server-side and enforce authorization there yourself [1].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/getting-started/the-supabase-way-to-build#scope-data-to-each-user-row-level-security",
         "https://supabase.com/docs/guides/database/tables#tables-with-different-readers"
       ],
-      "total_ms": 2286,
+      "total_ms": 2346,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -77,16 +77,16 @@
         "https://supabase.com/docs/guides/platform/billing-faq#how-many-free-projects-can-i-have"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 314,
+      "retrieve_ms": 687,
       "gold_rank": 1,
-      "answer": "Supabase pauses Free Plan projects that show low activity over a 7-day period in order to save server resources [2]. A project is considered inactive if it does not receive a sufficient number of user database activity or queries over the past week [1]. Typically, just a few user requests to the database each day are enough to keep a project from being paused [1]. \n\nAdditionally, if a downgrade to the Free Plan causes you to exceed the free projects limit, all projects within the organization will be paused [3].",
+      "answer": "Supabase pauses Free Plan projects that show low activity over a 7-day period in order to save server resources [2]. A Free plan project is considered inactive if it does not receive sufficient user database activity (such as a few user requests to the database each day) over the past week [1]. \n\nAdditionally, if a downgrade to the Free Plan causes your organization to exceed the free projects limit, all projects within the organization will be paused [3].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/platform/free-project-pausing#how-automatic-pausing-works",
         "https://supabase.com/docs/guides/platform/free-project-pausing",
         "https://supabase.com/docs/guides/platform/aws-marketplace/manage-your-subscription#downgrade-to-the-free-plan"
       ],
-      "total_ms": 1431,
+      "total_ms": 2454,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -103,15 +103,15 @@
         "https://supabase.com/docs/guides/platform/free-project-pausing#how-automatic-pausing-works"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 331,
+      "retrieve_ms": 620,
       "gold_rank": 1,
-      "answer": "No, paid projects cannot be paused and are not subject to automatic pausing for inactivity [1][2].",
+      "answer": "No, projects under a paid plan cannot be paused and are not subject to automatic pausing for inactivity [1][2].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/platform/free-project-pausing#preventing-automatic-project-pausing",
         "https://supabase.com/docs/guides/platform/free-project-pausing"
       ],
-      "total_ms": 1162,
+      "total_ms": 1494,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -128,14 +128,14 @@
         "https://supabase.com/docs/guides/platform/manage-your-usage/point-in-time-recovery#add-on-disabled-after-a-day"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 602,
+      "retrieve_ms": 591,
       "gold_rank": 1,
       "answer": "Pro Plan projects can access the last 7 days of daily backups [1].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/platform/backups"
       ],
-      "total_ms": 1641,
+      "total_ms": 1596,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -148,20 +148,19 @@
         "https://supabase.com/docs/guides/platform/backups",
         "https://supabase.com/docs/guides/self-hosting/postgres-upgrade-17#create-a-backup",
         "https://supabase.com/docs/guides/deployment/ci/backups",
-        "https://supabase.com/docs/guides/deployment/ci/backups#more-resources",
-        "https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore#back-up-database-using-the-cli"
+        "https://supabase.com/docs/guides/deployment/ci/backups#periodic-backups-workflow",
+        "https://supabase.com/docs/guides/deployment/ci/backups#more-resources"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 547,
+      "retrieve_ms": 753,
       "gold_rank": 1,
-      "answer": "We recommend that free tier plan projects regularly export their data using the Supabase CLI `db dump` command and maintain off-site backups [1]. \n\nTo back up your database using the CLI, follow these steps:\n\n1. On your project dashboard, click **Connect** to get your connection string (use the direct connection string, or the Session pooler connection string if your network doesn't support IPv6 and you don't have the IPv4 add-on enabled) [5].\n2. Run these commands to dump roles, schema, and data separately, replacing `[CONNECTION_STRING]` with your connection string [3][5]:\n\n```bash\nsupabase db dump --db-url [CONNECTION_STRING] -f roles.sql --role-only\nsupabase db dump --db-url [CONNECTION_STRING] -f schema.sql\nsupabase db dump --db-url [CONNECTION_STRING] -f data.sql --use-copy --data-only -x \"storage.buckets_vectors\" -x \"storage.vector_indexes\"\n```\n\nYou can also automate these database backups on a regular basis using GitHub Actions [3].",
+      "answer": "Free tier plan projects are recommended to regularly export their data using the Supabase CLI `db dump` command and maintain off-site backups [1]. \n\nYou can also use the Supabase CLI to create automated backups using GitHub Actions by running a series of commands to dump roles, schema, and data separately [3].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/platform/backups",
-        "https://supabase.com/docs/guides/deployment/ci/backups",
-        "https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore#back-up-database-using-the-cli"
+        "https://supabase.com/docs/guides/deployment/ci/backups"
       ],
-      "total_ms": 2246,
+      "total_ms": 1721,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -178,14 +177,14 @@
         "https://supabase.com/docs/guides/storage/uploads/s3-uploads#single-request-uploads"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 566,
+      "retrieve_ms": 637,
       "gold_rank": 3,
-      "answer": "When network stability is a concern or when uploading large files that exceed 6MB, the recommended approach is to use Resumable Uploads [3]. \n\nSupabase Storage implements the TUS protocol for resumable uploads, which allows the upload process to resume from where it left off in case of network interruptions [3]. This can be implemented using the `tus-js-client` library or other client-side libraries like Uppy [3].",
+      "answer": "The resumable upload method (using TUS) is recommended when network stability is a concern or when uploading large files that may exceed 6MB in size [3]. Supabase Storage implements the TUS protocol, which allows the upload process to be resumed from where it left off in case of interruptions [3].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/storage/uploads/resumable-uploads"
       ],
-      "total_ms": 1637,
+      "total_ms": 2126,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -202,12 +201,12 @@
         "https://supabase.com/docs/guides/storage/uploads/resumable-uploads#concurrency"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 501,
+      "retrieve_ms": 657,
       "gold_rank": 3,
       "answer": "I couldn't find this in the docs, so I don't want to guess. I've flagged your question for the team, and someone will follow up.",
       "handoff": true,
       "cited": [],
-      "total_ms": 1435,
+      "total_ms": 1833,
       "facts_ok": false,
       "cited_gold": false
     },
@@ -224,14 +223,14 @@
         "https://supabase.com/docs/guides/getting-started/quickstarts/hono#7-set-up-anonymous-sign-ins"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 486,
+      "retrieve_ms": 790,
       "gold_rank": 1,
-      "answer": "To prevent abuse of anonymous sign-ins, it is strongly recommended to enable invisible CAPTCHA or Cloudflare Turnstile [1]. Additionally, an IP-based rate limit is enforced at 30 requests per hour, which can be modified in your dashboard [1].",
+      "answer": "It is strongly recommended to enable invisible CAPTCHA or Cloudflare Turnstile to prevent abuse for anonymous sign-ins [1]. Additionally, an IP-based rate limit is enforced at 30 requests per hour, which can be modified in your dashboard [1].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/auth/auth-anonymous#abuse-prevention-and-rate-limits"
       ],
-      "total_ms": 1564,
+      "total_ms": 2492,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -248,15 +247,16 @@
         "https://supabase.com/docs/guides/auth/rate-limits#rate-limit-behavior"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 550,
+      "retrieve_ms": 708,
       "gold_rank": 1,
-      "answer": "The rate limit for anonymous sign-ins (`/auth/v1/signup`) is enforced at 30 requests per hour by IP address, which can be modified in your dashboard [1][4]. It allows brief bursts of up to 30 requests [4].",
+      "answer": "An IP-based rate limit for anonymous sign-ins is enforced at 30 requests per hour, which can be modified in your dashboard [1][4]. The bucket capacity for anonymous sign-ins matches this configured number per hour, allowing brief bursts of up to 30 requests in a short period [2].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/auth/auth-anonymous#abuse-prevention-and-rate-limits",
+        "https://supabase.com/docs/guides/auth/rate-limits#rate-limit-behavior",
         "https://supabase.com/docs/guides/deployment/going-into-prod#auth-rate-limits"
       ],
-      "total_ms": 1831,
+      "total_ms": 1961,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -273,15 +273,15 @@
         "https://supabase.com/docs/guides/functions/quickstart-dashboard#step-6-get-your-function-url-and-keys"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 578,
+      "retrieve_ms": 846,
       "gold_rank": 2,
-      "answer": "To set an API key secret for your Edge Function in production, you can use the Supabase CLI [1][3]. \n\nFor example, using the Supabase CLI, you can set secrets using either of the following methods:\n\n```bash\nsupabase secrets set --env-file .env\n```\nor\n\n```bash\nsupabase secrets set OPENAI_API_KEY=<your-api-key>\n```\n*(Replace `OPENAI_API_KEY` and the value with the specific secret name and key required by your function, such as `FIREWORKS_API_KEY`)* [1][3].",
+      "answer": "To set an API key secret for your Edge Function in production, you can use the Supabase CLI [1][3]:\n\n```bash\nsupabase secrets set --env-file .env\n```\nor \n\n```bash\nsupabase secrets set OPENAI_API_KEY=<your-api-key>\n```\n*(Replacing `OPENAI_API_KEY` and `<your-api-key>` with your specific secret name and value as needed, such as `FIREWORKS_API_KEY`)* [1][3].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/ai/automatic-embeddings#step-4-create-the-edge-function",
         "https://supabase.com/docs/guides/ai/integrations/fireworks-ai#store-your-api-key"
       ],
-      "total_ms": 1864,
+      "total_ms": 2010,
       "facts_ok": true,
       "cited_gold": false
     },
@@ -298,14 +298,14 @@
         "https://supabase.com/docs/guides/realtime/broadcast#how-it-works"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 398,
+      "retrieve_ms": 614,
       "gold_rank": 1,
-      "answer": "To enable Realtime on a table, you need to create a `supabase_realtime` publication and add your tables to it using SQL [1]:\n\n```sql\nbegin;\n-- remove the supabase_realtime publication\ndrop\n  publication if exists supabase_realtime;\n-- re-create the supabase_realtime publication with no tables\ncreate publication supabase_realtime;\ncommit;\n-- add a table called 'messages' to the publication\n-- (update this to match your tables)\nalter\n  publication supabase_realtime add table messages;\n```",
+      "answer": "To enable Realtime on a table, you need to create a `supabase_realtime` publication (if it doesn't exist) and add your tables to it using SQL [1]:\n\n```sql\nbegin;\n-- remove the supabase_realtime publication\ndrop\n  publication if exists supabase_realtime;\n-- re-create the supabase_realtime publication with no tables\ncreate publication supabase_realtime;\ncommit;\n-- add a table called 'messages' to the publication\n-- (update this to match your tables)\nalter\n  publication supabase_realtime add table messages;\n```",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/realtime/subscribing-to-database-changes#enable-postgres-changes"
       ],
-      "total_ms": 1985,
+      "total_ms": 1842,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -318,19 +318,19 @@
         "https://supabase.com/docs/guides/realtime/subscribing-to-database-changes#streaming-inserts",
         "https://supabase.com/docs/guides/realtime/postgres-changes#listening-to-specific-events",
         "https://supabase.com/docs/guides/realtime/broadcast#set-up-trigger",
-        "https://supabase.com/docs/guides/database/extensions/wrappers/clerk#data-modify-examples",
-        "https://supabase.com/docs/guides/realtime/postgres-changes#contained-in-list-in"
+        "https://supabase.com/docs/guides/realtime/postgres-changes#contained-in-list-in",
+        "https://supabase.com/docs/guides/realtime/postgres-changes#listening-to-multiple-changes"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 463,
+      "retrieve_ms": 686,
       "gold_rank": 1,
-      "answer": "You can listen to new rows being inserted by using the `INSERT` event with `postgres_changes` [1][2]. Here is an example in JavaScript:\n\n```javascript\nconst channel = supabase\n  .channel('schema-db-changes')\n  .on(\n    'postgres_changes',\n    {\n      event: 'INSERT',\n      schema: 'public',\n    },\n    (payload) => console.log(payload)\n  )\n  .subscribe()\n```",
+      "answer": "To listen to new rows being inserted from JavaScript, you can use the `postgres_changes` event with `event: 'INSERT'` [1][2]. \n\nHere is an example:\n\n```javascript\nconst channel = supabase\n  .channel('schema-db-changes')\n  .on(\n    'postgres_changes',\n    {\n      event: 'INSERT',\n      schema: 'public',\n    },\n    (payload) => console.log(payload)\n  )\n  .subscribe()\n```\n\nThe channel name can be any string except 'realtime' [2].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/realtime/subscribing-to-database-changes#streaming-inserts",
         "https://supabase.com/docs/guides/realtime/postgres-changes#listening-to-specific-events"
       ],
-      "total_ms": 1649,
+      "total_ms": 1761,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -347,16 +347,16 @@
         "https://supabase.com/docs/guides/realtime/subscribing-to-database-changes#create-a-trigger"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 440,
+      "retrieve_ms": 608,
       "gold_rank": 4,
-      "answer": "Yes, you can run code automatically whenever a row is inserted by using a trigger with the `after insert` (or `before insert`) option and the `for each row` execution frequency [2][4][5]. \n\nFor example, to execute a trigger function after a row is inserted into a table, you can use the following syntax [5]:\n\n```sql\ncreate trigger handle_your_table_changes\nafter insert\non public.your_table\nfor each row\nexecute function your_table_changes ();\n```",
+      "answer": "Yes, you can run code automatically whenever a row is inserted by using a trigger with the `after insert` (or `before insert`) option and the `for each row` execution frequency [2][4][5]. \n\nFor example, to set up a trigger for insert events on a table:\n\n```sql\ncreate trigger embed_documents_on_insert\n  after insert\n  on documents\n  for each row\n  execute function util.queue_embeddings('embedding_input', 'embedding');\n```[2]",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/ai/automatic-embeddings#2-create-triggers-to-enqueue-embedding-jobs",
         "https://supabase.com/docs/guides/database/postgres/triggers#execution-frequency",
         "https://supabase.com/docs/guides/realtime/subscribing-to-database-changes#create-a-trigger"
       ],
-      "total_ms": 1672,
+      "total_ms": 1847,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -373,16 +373,16 @@
         "https://supabase.com/docs/guides/storage/serving/image-transformations#signing-urls-with-transformation-options"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 424,
+      "retrieve_ms": 551,
       "gold_rank": 1,
-      "answer": "You can resize images stored in a bucket by using the `width` and `height` parameters within the `transform` option [4]. If you only specify one of the parameters, the image will be resized and cropped while maintaining the aspect ratio [4]. \n\nYou can also use the `resize` parameter to choose a resizing mode (`cover`, `contain`, or `fill`) [1]. \n\nHere is an example of downloading a resized image:\n\n```javascript\nsupabase.storage.from('bucket').download('image.jpg', {\n  transform: {\n    width: 800,\n    height: 300,\n    resize: 'contain', // 'cover' | 'fill'\n  },\n})\n```\n\nImage resizing is currently enabled for the Pro Plan and above [2].",
+      "answer": "You can resize images using the `width` and `height` parameters [4]. If only one of these parameters is specified, the image will be resized and cropped while maintaining the aspect ratio [4]. \n\nYou can also use different resizing modes with the `resize` parameter:\n- `cover`: resizes the image while keeping the aspect ratio to fill a given size and crops projecting parts (default) [1].\n- `contain`: resizes the image while keeping the aspect ratio to fit a given size [1].\n- `fill`: resizes the image without keeping the aspect ratio [1].\n\nExample of downloading a resized image:\n```javascript\nsupabase.storage.from('bucket').download('image.jpg', {\n  transform: {\n    width: 800,\n    height: 300,\n    resize: 'contain', // 'cover' | 'fill'\n  },\n})\n```\n*(Note: Image resizing is currently enabled for the Pro Plan and above [2].)*",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/storage/serving/image-transformations#modes",
         "https://supabase.com/docs/guides/storage/serving/image-transformations",
         "https://supabase.com/docs/guides/storage/serving/image-transformations#resizing"
       ],
-      "total_ms": 1606,
+      "total_ms": 1954,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -399,14 +399,16 @@
         "https://supabase.com/docs/guides/storage/serving/image-transformations#transformation-options"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 457,
+      "retrieve_ms": 477,
       "gold_rank": 1,
-      "answer": "I couldn't find this in the docs, so I don't want to guess. I've flagged your question for the team, and someone will follow up.",
-      "handoff": true,
-      "cited": [],
-      "total_ms": 1626,
-      "facts_ok": false,
-      "cited_gold": false
+      "answer": "Image resizing is currently enabled for the Pro Plan and above [1].",
+      "handoff": false,
+      "cited": [
+        "https://supabase.com/docs/guides/storage/serving/image-transformations"
+      ],
+      "total_ms": 1518,
+      "facts_ok": true,
+      "cited_gold": true
     },
     {
       "id": "a17",
@@ -421,14 +423,14 @@
         "https://supabase.com/docs/guides/functions/error-codes#invalidurl"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 369,
+      "retrieve_ms": 483,
       "gold_rank": 2,
       "answer": "To invoke edge functions from the browser, you need to handle CORS Preflight requests [2].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/functions/cors"
       ],
-      "total_ms": 6472,
+      "total_ms": 25505,
       "facts_ok": false,
       "cited_gold": true
     },
@@ -445,9 +447,9 @@
         "https://supabase.com/docs/guides/auth/auth-mfa#overview"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 784,
+      "retrieve_ms": 903,
       "gold_rank": 1,
-      "answer": "To add two-factor authentication (MFA) using an app authenticator (TOTP), applications require an **Enrollment flow** and an **Authentication (sign-in) flow** [4][5]. \n\n### 1. Enrollment Flow\nIn the setup flow (when a user has an active session at AAL1), you call the **Enroll API** to generate a QR code that the user can scan with their authenticator app [4]. The QR code transmits a shared secret used to generate a Time-based One-Time Password (TOTP) [4]. \n- If rendering the QR code is difficult, an alternate URI representation following the `otpauth` scheme (e.g., `otpauth://totp/supabase:alice@supabase.com?secret=<secret>&issuer=supabase`) can be manually inputted by the user [4].\n- After scanning, the user enters the generated code into your app, which uses the **Challenge and Verify APIs** to validate it [4]. On success, the session upgrades to AAL2 [4].\n\n### 2. Sign-In Flow\nOnce a user has signed in via their first factor (such as email and password, magic link, or social sign-in), you need to check if any additional factors need to be verified by calling the `supabase.auth.mfa.getAuthenticatorAssuranceLevel()` API [2][3]:\n```javascript\nconst { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()\n```\n- If you receive a `currentLevel` of `aal1` and a `nextLevel` of `aal2`, the user has an MFA factor enrolled but has not verified it yet, and they should be given the option to go through MFA [2][3].\n- Call the **List Factors API** to see if the user has factors enrolled [4]. If they do, prompt them to open their authenticator app, enter the code, and run it through the Challenge and Verify path to reach AAL2 [4]. If they have no factors enrolled, send them through the setup flow first [4].",
+      "answer": "To add multi-factor authentication (MFA) using an authenticator app (TOTP), applications require an **Enrollment flow** and an **Authentication flow** using Supabase Auth's APIs [4][5]. \n\n### 1. Enrollment Flow\n1. The user (whose session is already at AAL1) calls the Enroll API, which returns a QR code and a URI representation (`otpauth://...`) for manual input if needed [4].\n2. The user scans the QR code with their authenticator app (such as Google Authenticator) to capture a shared secret [4].\n3. The user enters the generated code from the app, which is checked by the Challenge and Verify APIs [4]. \n4. Upon success, the session is upgraded to AAL2 [4]. If the code is incorrect, prompt the user to enter it again [4].\n\n### 2. Sign-in Flow\n1. Once a user signs in via their first factor (such as email and password, magic link, or social sign-in), check if additional factors need to be verified by calling the `supabase.auth.mfa.getAuthenticatorAssuranceLevel()` API [2][3].\n2. If the `currentLevel` is `aal1` and the `nextLevel` is `aal2`, the user has an MFA factor enrolled but has not verified it yet [2][3].\n3. Call the List Factors API [4]. If the user has factors enrolled, they open their authenticator app, enter a code, and the app uses the Challenge and Verify path to reach `aal2` [4].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/auth/auth-mfa/totp#add-a-challenge-step-to-sign-in",
@@ -455,7 +457,7 @@
         "https://supabase.com/docs/guides/auth/auth-mfa/totp#how-does-app-authenticator-multi-factor-authentication-work",
         "https://supabase.com/docs/guides/auth/auth-mfa#overview"
       ],
-      "total_ms": 2958,
+      "total_ms": 2336,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -472,7 +474,7 @@
         "https://supabase.com/docs/guides/self-hosting/accessing-postgres#customize-supavisor"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 616,
+      "retrieve_ms": 654,
       "gold_rank": 1,
       "answer": "The transaction pooler uses port `6543` [1][2][3][4][5].",
       "handoff": false,
@@ -483,7 +485,7 @@
         "https://supabase.com/docs/guides/getting-started/quickstarts/ruby-on-rails#4-set-up-the-postgres-connection-details",
         "https://supabase.com/docs/guides/self-hosting/accessing-postgres#customize-supavisor"
       ],
-      "total_ms": 1701,
+      "total_ms": 2167,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -500,9 +502,9 @@
         "https://supabase.com/docs/guides/platform/ipv4-address#supabase-and-ipv6-compatibility"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 533,
+      "retrieve_ms": 720,
       "gold_rank": 1,
-      "answer": "If your network is IPv4-only and you don't have the IPv4 add-on, you should use session mode or a shared pooler connection string instead of a direct connection [1][5]. \n\nYou can use the Session pooler (port `5432`) connection string from your project dashboard, which works from IPv4-only networks [2][3][4].",
+      "answer": "If your network is IPv4-only and you don't have the IPv4 add-on, you should use session mode or a shared pooler connection string instead of a direct connection [1][5]. \n\nYou can use the session pooler connection string (port `5432`), which works from IPv4-only networks [2][3][4]. To do this:\n1. Navigate to your project dashboard and click **Connect** [2][3][4].\n2. Look for the **Session pooler** connection string and copy it [2][3][4].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/database/connecting-to-postgres#direct-connection",
@@ -511,7 +513,7 @@
         "https://supabase.com/docs/guides/getting-started/quickstarts/spring-boot#4-set-up-the-postgres-connection-details",
         "https://supabase.com/docs/guides/platform/ipv4-address#supabase-and-ipv6-compatibility"
       ],
-      "total_ms": 1744,
+      "total_ms": 1992,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -528,9 +530,9 @@
         "https://supabase.com/docs/guides/functions/function-configuration#custom-entrypoints"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 466,
+      "retrieve_ms": 591,
       "gold_rank": 2,
-      "answer": "You can create a new Edge Function either via the Dashboard or using the Supabase CLI [1][2].\n\n**Via the Dashboard:**\n1. Click the **\"Deploy a new function\"** button and select **\"Via Editor\"** to create a function directly in the dashboard [1].\n2. Choose a pre-built template (such as \"Hello World\") or start from scratch [1].\n\n**Via the Supabase CLI:**\n1. Navigate to your local project and initialize Supabase if you haven't already [4]:\n   ```bash\n   supabase init\n   ```\n2. Generate a new Edge Function using the CLI [2][3][4]:\n   ```bash\n   supabase functions new <function-name>\n   ```\n   *(For example: `supabase functions new hello-world`)* [2]",
+      "answer": "You can create a new Edge Function using the Supabase Dashboard or the Supabase CLI:\n\n**Using the Dashboard:**\nClick the **\"Deploy a new function\"** button and select **\"Via Editor\"** to create a function directly in the dashboard [1].\n\n**Using the Supabase CLI:**\nRun the following command within your project to generate a new Edge Function with a basic template:\n```bash\nsupabase functions new hello-world\n```\n*(You can replace `hello-world` with your desired function name, such as `embed` or `text-to-image`)* [2][3][4].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/functions/quickstart-dashboard#step-2-create-your-first-function",
@@ -538,7 +540,7 @@
         "https://supabase.com/docs/guides/ai/automatic-embeddings#step-4-create-the-edge-function",
         "https://supabase.com/docs/guides/ai/hugging-face#edge-functions"
       ],
-      "total_ms": 1925,
+      "total_ms": 2006,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -555,9 +557,9 @@
         "https://supabase.com/docs/guides/functions/deploy"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 517,
+      "retrieve_ms": 578,
       "gold_rank": 3,
-      "answer": "You can deploy your Edge Functions using either the Supabase Dashboard or the Supabase CLI [1][2].\n\n### Option 1: Using the Dashboard\n1. Open the function editor in the Dashboard and click the **\"Deploy function\"** button at the bottom [1].\n2. Wait for the deployment to complete (usually 10\u201330 seconds) [1].\n\n### Option 2: Using the Supabase CLI\nYou can deploy all edge functions within your `functions` folder with a single command [3][4]:\n```bash\nsupabase functions deploy\n```\n\nOr you can deploy an individual Edge Function by specifying its name [3][4]:\n```bash\nsupabase functions deploy hello-world\n```\n\nIf Docker isn't available, the CLI automatically falls back to API-based deployment, which you can also explicitly invoke using the `--use-api` flag [4]:\n```bash\nsupabase functions deploy hello-world --use-api\n```",
+      "answer": "You can deploy your Edge Functions using either the Supabase Dashboard or the Supabase CLI [1][2].\n\n### Option 1: Using the Dashboard\n1. Click the **\"Deploy function\"** button at the bottom of the editor [1].\n2. Wait 10\u201330 seconds for the deployment to complete [1].\n\n### Option 2: Using the Supabase CLI\nYou can deploy all Edge Functions in your `functions` folder with a single command [3]:\n```bash\nsupabase functions deploy\n```\n\nOr deploy an individual Edge Function by specifying its name (e.g., `hello-world`) [3][4]:\n```bash\nsupabase functions deploy hello-world\n```\n\nIf Docker isn't available, the CLI automatically falls back to API-based deployment, or you can explicitly use API deployment with the `--use-api` flag [4]:\n```bash\nsupabase functions deploy hello-world --use-api\n```",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/functions/quickstart-dashboard#step-4-deploy-your-function",
@@ -565,7 +567,7 @@
         "https://supabase.com/docs/guides/functions/deploy#step-3-deploy-functions",
         "https://supabase.com/docs/guides/functions/quickstart#step-6-deploy-to-production"
       ],
-      "total_ms": 1959,
+      "total_ms": 2042,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -582,15 +584,15 @@
         "https://supabase.com/docs/guides/security/gdpr-compliance#data-residency"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 636,
+      "retrieve_ms": 644,
       "gold_rank": 2,
-      "answer": "Yes, the South Asia (Mumbai) region is available (`ap-south-1`) [1][2].",
+      "answer": "Yes, the South Asia (Mumbai) region (`ap-south-1`) is available [1][2].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/functions/regional-invocation#available-regions",
         "https://supabase.com/docs/guides/platform/regions#specific-regions"
       ],
-      "total_ms": 1537,
+      "total_ms": 1564,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -607,14 +609,14 @@
         "https://supabase.com/docs/guides/auth/auth-email-templates#email-prefetching"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 525,
+      "retrieve_ms": 689,
       "gold_rank": 1,
-      "answer": "Yes, if the **Confirm Email** configuration is disabled, users do not need to verify their email address in order to sign in for the first time, and their email is implicitly confirmed in the database [1].",
+      "answer": "Yes, if **Confirm Email** is disabled, users do not need to verify their email address in order to sign in for the first time [1]. Having **Confirm Email** disabled implicitly confirms the user's email in the database [1].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/auth/general-configuration"
       ],
-      "total_ms": 1632,
+      "total_ms": 1667,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -628,20 +630,19 @@
         "https://supabase.com/docs/guides/storage/debugging/error-codes#403-unauthorized",
         "https://supabase.com/docs/guides/self-hosting/self-hosted-s3#tus-upload-errors-on-cloudflare-r2",
         "https://supabase.com/docs/guides/self-hosting/self-hosted-s3#permission-denied-on-uploads",
-        "https://supabase.com/docs/guides/storage/security/access-control#access-policies"
+        "https://supabase.com/docs/guides/storage/uploads/standard-uploads#overwriting-files"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 575,
-      "gold_rank": 5,
-      "answer": "To allow uploads to your bucket, you need to create an RLS policy on the `storage.objects` table that grants the `INSERT` permission to the appropriate roles [4][5]. You can do this by going to **Storage** > **Files** > **Policies** in Studio [4]. \n\nIf you want to allow overwriting files using the `upsert` functionality, you will additionally need to grant `SELECT` and `UPDATE` permissions [5].\n\nNote that setting a bucket to \"Public\" only allows unauthenticated downloads; uploads are always blocked unless an RLS policy is created [4].",
+      "retrieve_ms": 786,
+      "gold_rank": null,
+      "answer": "Setting a bucket to \"Public\" only allows unauthenticated downloads, and uploads are always blocked unless you create an RLS policy on the `storage.objects` table [4]. \n\nTo allow uploads, go to **Storage** > **Files** > **Policies** in Studio and create a policy that allows `INSERT` for the appropriate roles [4].",
       "handoff": false,
       "cited": [
-        "https://supabase.com/docs/guides/self-hosting/self-hosted-s3#permission-denied-on-uploads",
-        "https://supabase.com/docs/guides/storage/security/access-control#access-policies"
+        "https://supabase.com/docs/guides/self-hosting/self-hosted-s3#permission-denied-on-uploads"
       ],
-      "total_ms": 1803,
+      "total_ms": 1867,
       "facts_ok": true,
-      "cited_gold": true
+      "cited_gold": false
     },
     {
       "id": "a26",
@@ -656,14 +657,14 @@
         "https://supabase.com/docs/guides/storage/cdn/fundamentals#public-vs-private-buckets"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 549,
+      "retrieve_ms": 481,
       "gold_rank": 1,
       "answer": "Yes, buckets are private by default [1].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/storage/buckets/fundamentals#private-buckets"
       ],
-      "total_ms": 1382,
+      "total_ms": 1455,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -680,15 +681,15 @@
         "https://supabase.com/docs/guides/functions/error-codes#unauthorizedinvalidjwtformat"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 556,
+      "retrieve_ms": 576,
       "gold_rank": 1,
-      "answer": "To turn off JWT verification for a Stripe webhook function, you can configure it in your `config.toml` file [1][3]:\n\n```toml\n[functions.stripe-webhook]\nverify_jwt = false\n```\n\nIf you are serving your Edge Functions locally, you can also pass the `--no-verify-jwt` flag [1]:\n\n```bash\nsupabase functions serve hello-world --no-verify-jwt\n```",
+      "answer": "To turn off JWT verification for a Stripe webhook function, you can configure it in your `config.toml` file by setting `verify_jwt = false` for that specific function [1][3]:\n\n```toml\n[functions.stripe-webhook]\nverify_jwt = false\n```\n\nAdditionally, if you are serving your Edge Functions locally, you can pass the `--no-verify-jwt` flag [1]:\n\n```bash\nsupabase functions serve hello-world --no-verify-jwt\n```",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/functions/function-configuration#skipping-authorization-checks",
         "https://supabase.com/docs/guides/functions/function-configuration#configuration"
       ],
-      "total_ms": 1579,
+      "total_ms": 2130,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -705,16 +706,16 @@
         "https://supabase.com/docs/guides/auth/social-sign-in/auth-discord"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 513,
+      "retrieve_ms": 1412,
       "gold_rank": 1,
-      "answer": "The callback URL you give to Discord depends on whether you are using a hosted Supabase project, a self-hosted instance, or testing locally:\n\n* **For a Supabase project:** `https://<project-ref>.supabase.co/auth/v1/callback` (You can find this by going to your Supabase Project Dashboard, clicking **Authentication**, then **Sign In / Providers**, and expanding **Discord**) [4].\n* **For a self-hosted Supabase installation:** `https://<your-domain>/auth/v1/callback` [3].\n* **For local development using the Supabase CLI:** `http://localhost:54321/auth/v1/callback` [1].",
+      "answer": "The callback URL to give Discord depends on whether you are using a hosted Supabase project, self-hosting, or developing locally:\n\n* **For a hosted Supabase project:** The callback URL looks like `https://<project-ref>.supabase.co/auth/v1/callback` [4]. You can find and copy this exact URL by going to your Supabase Project Dashboard, clicking **Authentication** > **Sign In / Providers**, and expanding **Discord** [4].\n* **For a self-hosted Supabase instance:** The callback URL should look like `https://<your-domain>/auth/v1/callback` (HTTPS is required by most OAuth providers) [3].\n* **For local development with the Supabase CLI:** The callback URL is `http://localhost:54321/auth/v1/callback` [1].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/auth/social-sign-in/auth-discord#local-development",
         "https://supabase.com/docs/guides/self-hosting/self-hosted-oauth#before-you-begin",
         "https://supabase.com/docs/guides/auth/social-sign-in/auth-discord#find-your-callback-url"
       ],
-      "total_ms": 1705,
+      "total_ms": 2627,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -731,16 +732,16 @@
         "https://supabase.com/docs/guides/platform/manage-your-usage/disk-size#what-you-are-charged-for"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 354,
+      "retrieve_ms": 627,
       "gold_rank": 1,
-      "answer": "What happens when your database exceeds your plan quota depends on whether you are on a Free Plan or a Paid Plan:\n\n* **Free Plan:** Free Plan projects have a fixed disk size of 2 GB and do not autoscale [3]. When disk usage reaches 95%, Supabase puts your database into read-only mode to prevent the disk from filling completely [3]. If the disk becomes completely full, Postgres shuts down and will stay down until you upgrade to the Pro Plan [3]. (Note: The 500 MB database size quota on the Free Plan is a billing quota and does not trigger read-only mode [3].)\n* **Paid Plans (Pro Plan and higher):** Projects on paid plans have autoscaling disks [2]. When your database reaches 90% of the allocated disk size, the disk automatically expands to be 50% larger (up to a maximum of 200 GB added at once) [2]. Autoscaling is limited to four modifications within a rolling 24-hour window [2]. If you reach 95% disk utilization and have exhausted your modification quota, your project will enter read-only mode [2].\n* **Fair Use Service Restrictions:** Separately, your organization can be placed under a Fair Use service restriction (where requests return a `402` status code) when its database size exceeds the plan quota evaluated per organization [1]. This is based on the average daily database size over the billing period, not the live size [1]. To resolve a fair use restriction immediately, you can upgrade your plan or disable your Spend Cap [1].",
+      "answer": "Depending on your plan and whether you exceed your database size quota or your disk space limit, the following can happen:\n\n**Fair Use Database Size Restriction**\nWhen your organization's database size exceeds the plan quota (evaluated per organization as the average daily database size over the billing period), your organization can be placed under a Fair Use service restriction where requests return a `402` status code [1]. To resolve this, you can upgrade your plan, disable your Spend Cap to lift the restriction immediately, or reduce your database size and wait for the new billing cycle [1].\n\n**Free Plan Disk Limits**\n* **At 95% disk usage:** Supabase puts your database into read-only mode to prevent the disk from filling completely [3]. Read-only mode turns off automatically once disk usage goes below 95% [3].\n* **If the disk becomes completely full:** Postgres shuts down and stays down until you upgrade to the Pro Plan [3].\n\n**Paid Plan Disk Limits (Pro Plan and higher)**\n* **Autoscaling:** Disks expand automatically by 50% when the database reaches 90% of the allocated disk size (capped at a maximum of 200 GB added per resize) [2]. \n* **Read-only mode:** If you reach 95% disk utilization and have also exhausted your modification quota (limited to four modifications within a rolling 24-hour window), your project will enter read-only mode [2].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/platform/database-size#fair-use-database-size-restriction",
         "https://supabase.com/docs/guides/platform/database-size#paid-plan-behavior",
         "https://supabase.com/docs/guides/platform/database-size#free-plan-behavior"
       ],
-      "total_ms": 2169,
+      "total_ms": 1906,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -757,16 +758,16 @@
         "https://supabase.com/docs/guides/database/extensions/pgvector"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 796,
+      "retrieve_ms": 897,
       "gold_rank": 3,
-      "answer": "You can store embeddings in Postgres using the `pgvector` extension or by using the Supabase `vecs` Python package [2][3]. \n\n### Method 1: Using `pgvector` in SQL\n1. Enable the `pgvector` extension [3]:\n```sql\ncreate extension vector\nwith\n  schema extensions;\n```\n\n2. Create a table with a vector column (adjust the dimension size to match your embedding model) [3]:\n```sql\ncreate table documents (\n  id bigint primary key generated always as identity,\n  content text,\n  embedding extensions.vector(512)\n);\n```\n*(Alternatively, add a vector column to an existing table using `alter table documents add column embedding extensions.vector(512);`)* [3]\n\n3. You can then insert records containing your embeddings using the Supabase client (for example, in JavaScript/TypeScript) [5]:\n```javascript\nconst { data, error } = await supabase.from('posts').insert({\n  title,\n  body,\n  embedding,\n})\n```\n\n---\n\n### Method 2: Using the Supabase `vecs` Python Package\nYou can store your embeddings using the Supabase `vecs` Python library [2]:\n\n1. Install `vecs`:\n```bash\npip install vecs\n```\n\n2. Connect to your database and store the vectors in a collection [2]:\n```python\nimport vecs\n\nDB_CONNECTION = \"postgresql://postgres:[password]@[host]:[port]/[database]\"\nvx = vecs.create_client(DB_CONNECTION)\n\n# create a collection of vectors with a specified dimension\nimages = vx.get_or_create_collection(name=\"image_vectors\", dimension=512)\n\n# insert a vector into the collection\nimages.upsert(\n    records=[\n        (\n            image_id,\n            embeddings,\n            {} # metadata\n        )\n    ]\n)\nimages.create_index()\n```",
+      "answer": "You can store embeddings in Postgres using the `pgvector` extension or by using the Supabase `vecs` Python package [2][3]. \n\n### Method 1: Using `pgvector` in SQL\n1. Enable the `pgvector` extension [3]:\n```sql\ncreate extension vector\nwith\n  schema extensions;\n```\n\n2. Create a table with a vector column (adjust the dimension size to match your embedding model) [3]:\n```sql\ncreate table documents (\n  id bigint primary key generated always as identity,\n  content text,\n  embedding extensions.vector(512)\n);\n```\n*(Alternatively, you can add a vector column to an existing table using `alter table documents add column embedding extensions.vector(512);` [3].)*\n\n### Method 2: Using the Supabase `vecs` Python package\nYou can use `vecs` to connect to your database, create a collection, and upsert your embedding records [1][2]. For example:\n\n```python\nimport vecs\n\nDB_CONNECTION = \"postgresql://postgres:[password]@[host]:[port]/[database]\"\nvx = vecs.create_client(DB_CONNECTION)\n\n# Create a collection of vectors with the desired dimensions\nimages = vx.get_or_create_collection(name=\"image_vectors\", dimension=512)\n\n# Insert a vector into the collection\nimages.upsert(\n    records=[\n        (\n            \"identifier_or_filename\",\n            embeddings,\n            {} # metadata\n        )\n    ]\n)\nimages.create_index()\n```",
       "handoff": false,
       "cited": [
+        "https://supabase.com/docs/guides/ai/integrations/amazon-bedrock#store-the-embeddings-with-vecs",
         "https://supabase.com/docs/guides/ai/integrations/roboflow#step-3-save-embeddings-in-supabase",
-        "https://supabase.com/docs/guides/ai/semantic-search#semantic-search-in-postgres",
-        "https://supabase.com/docs/guides/database/extensions/pgvector"
+        "https://supabase.com/docs/guides/ai/semantic-search#semantic-search-in-postgres"
       ],
-      "total_ms": 2593,
+      "total_ms": 2953,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -783,17 +784,16 @@
         "https://supabase.com/docs/guides/ai/keyword-search#when-and-why-to-use-keyword-search"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 571,
+      "retrieve_ms": 646,
       "gold_rank": 1,
-      "answer": "Yes, you can combine keyword search and semantic search, which is known as hybrid search [1][2][3][5]. Hybrid search combines full-text search (keyword search) with semantic search to identify results that are both directly and contextually relevant to a user's query [1]. \n\nThe process works by executing each search method separately to generate its own list of results, and then merging them into a single, unified list through a process called \"fusion\" [2].",
+      "answer": "Yes, you can combine keyword search and semantic search, which is known as hybrid search [1][3]. \n\nHybrid search works by executing each search method separately to generate its own unique result lists [2]. These separate lists are then combined into a single, unified list through a process called \"fusion,\" which merges the results based on ranking or scoring systems such as relevance to the query or individual list rankings [2].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/ai/hybrid-search",
         "https://supabase.com/docs/guides/ai/hybrid-search#how-to-combine-search-methods",
-        "https://supabase.com/docs/guides/ai#search",
-        "https://supabase.com/docs/guides/ai/keyword-search#when-and-why-to-use-keyword-search"
+        "https://supabase.com/docs/guides/ai#search"
       ],
-      "total_ms": 2139,
+      "total_ms": 2235,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -810,15 +810,16 @@
         "https://supabase.com/docs/guides/self-hosting/self-hosted-oauth#step-2-configure-environment-variables"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 595,
+      "retrieve_ms": 1202,
       "gold_rank": 1,
-      "answer": "To add Sign in with Google to your Supabase project, follow these steps:\n\n### 1. Project Setup\nObtain a Client ID and Client Secret from the Clients section of the Google Auth Platform console [1]:\n1. Create a new OAuth client ID and choose **Web application** as the application type [1].\n2. Under **Authorized JavaScript origins**, add your application's URL (e.g., `https://example.com` or `http://localhost:<port>` for local development) [1].\n3. Under **Authorized redirect URIs**, add your Supabase project's callback URL found on the Google provider page in your Dashboard (or use `http://127.0.0.1:54321/auth/v1/callback` for local development) [1].\n4. Click **Create** and save your Client ID and Client Secret to the Google provider page on your Supabase Dashboard [1].\n\n### 2. Signing Users In Using Application Code\nTo trigger the sign-in flow using application code, call the `signInWithOAuth` method [4]:\n\n```javascript\nsupabase.auth.signInWithOAuth({\n  provider: 'google',\n})\n```\n\nFor a PKCE flow (such as with Server-Side Auth), provide a `redirectTo` URL that points to your callback route [4]:\n\n```javascript\nawait supabase.auth.signInWithOAuth({\n  provider,\n  options: {\n    redirectTo: `http://example.com/auth/callback`,\n  },\n})\n```",
+      "answer": "To add Sign in with Google to your Supabase project, follow these setup and implementation steps:\n\n### 1. Prerequisites and Google Project Setup\n1. Prepare a Google Cloud project by going to the Google Cloud Platform [3].\n2. Use the Google Auth Platform console to register and set up your application's Audience, Data Access (Scopes), and Branding/Verification [3].\n3. In the Clients section of the Google Auth Platform console, obtain a Client ID and Client Secret by creating a new OAuth client ID and choosing **Web application** for the application type [1]:\n   - Under **Authorized JavaScript origins**, add your application's URL (e.g., `https://example.com` or `http://localhost:<port>` for local development) [1].\n   - Under **Authorized redirect URIs**, add your Supabase project's callback URL (found on the Google provider page in your Dashboard) or `http://127.0.0.1:54321/auth/v1/callback` for local development [1].\n4. Save the Client ID and Client Secret and add them to the Google provider page on your Supabase Dashboard [1].\n\n### 2. Local Development Configuration\nIf developing locally, configure the provider in `supabase/config.toml` and add your environment variable [4]:\n```toml\n[auth.external.google]\nenabled = true\nclient_id = \"<client-id>\"\nsecret = \"env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET)\"\nskip_nonce_check = false\n```\n```bash\nSUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET=\"<client-secret>\"\n```\n\n### 3. Signing Users In via Application Code\nTo use your own application code for the sign-in button, call the `signInWithOAuth` method [4]:\n\n```typescript\nsupabase.auth.signInWithOAuth({\n  provider: 'google',\n})\n```\n\nFor a PKCE flow (such as in Server-Side Auth), provide a `redirectTo` URL pointing to your callback route [4]:\n```typescript\nawait supabase.auth.signInWithOAuth({\n  provider: 'google',\n  options: {\n    redirectTo: `http://example.com/auth/callback`,\n  },\n})\n```",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/auth/social-sign-in/auth-google#project-setup",
+        "https://supabase.com/docs/guides/auth/social-sign-in/auth-google#prerequisites",
         "https://supabase.com/docs/guides/auth/social-sign-in/auth-google#local-development"
       ],
-      "total_ms": 2223,
+      "total_ms": 3097,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -830,21 +831,22 @@
       "retrieved": [
         "https://supabase.com/docs/guides/auth/passwords#step-1-create-a-reset-password-page",
         "https://supabase.com/docs/guides/auth/password-security#require-reauthentication-when-changing-password",
-        "https://supabase.com/docs/guides/auth/passwords#resetting-a-password",
-        "https://supabase.com/docs/guides/auth/passwords#step-2-create-a-change-password-page",
-        "https://supabase.com/docs/guides/auth/password-security#require-current-password-when-changing-password"
-      ],
-      "gate_handoff": false,
-      "retrieve_ms": 532,
-      "gold_rank": 1,
-      "answer": "To let a user reset their password, follow these steps:\n\n1. **Create a reset password page** where you collect the user's email address and request a password reset email using `resetPasswordForEmail()` [1]. Be sure to specify the `redirectTo` URL pointing to your change password page [1].\n\n```javascript\nawait supabase.auth.resetPasswordForEmail('valid.email@supabase.io', {\n  redirectTo: 'http://example.com/account/update-password',\n})\n```\n\n*Note: To prevent user enumeration, `resetPasswordForEmail()` does not reveal whether an account exists for the given email address [3].*\n\n2. **Create a change password page** (accessible only to authenticated users) where the user enters their new password [4]. Then, call `updateUser` to update it [4]:\n\n```javascript\nawait supabase.auth.updateUser({ password: 'new_password' })\n```",
-      "handoff": false,
-      "cited": [
-        "https://supabase.com/docs/guides/auth/passwords#step-1-create-a-reset-password-page",
+        "https://supabase.com/docs/guides/local-development/customizing-email-templates#authemailtemplaterecovery",
         "https://supabase.com/docs/guides/auth/passwords#resetting-a-password",
         "https://supabase.com/docs/guides/auth/passwords#step-2-create-a-change-password-page"
       ],
-      "total_ms": 24986,
+      "gate_handoff": false,
+      "retrieve_ms": 599,
+      "gold_rank": 1,
+      "answer": "To let a user reset their password, follow these steps:\n\n1. **Create a reset password page:** Create a publicly accessible page that collects the user's email address and requests a password reset email using `resetPasswordForEmail()`, specifying a redirect URL that points to your change password page [1]:\n   ```javascript\n   await supabase.auth.resetPasswordForEmail('valid.email@supabase.io', {\n     redirectTo: 'http://example.com/account/update-password',\n   })\n   ```\n   *(Note: To prevent user enumeration, `resetPasswordForEmail()` will not reveal whether an account exists for the given email address, and no email will be sent if the address has no associated user, though the method returns without an error [4].)*\n\n2. **Create a change password page:** Create a change password page at the URL specified in the previous step, which should be accessible only to authenticated users [5]. Collect the user's new password and call `updateUser` [5]:\n   ```javascript\n   await supabase.auth.updateUser({ password: 'new_password' })\n   ```\n\nIf you require reauthentication when changing passwords, users must be recently logged in (within the last 24 hours), or you must validate a `nonce` using the `reauthenticate()` API call along with `updateUser()` [2]:\n```javascript\nconst { error } = await supabase.auth.reauthenticate()\n...\nconst { data, error } = await supabase.auth.updateUser({\n  email: 'user@email.com',\n  nonce: `${nonce}`,\n  password: \"new_super_strong_password\"\n})\n```",
+      "handoff": false,
+      "cited": [
+        "https://supabase.com/docs/guides/auth/passwords#step-1-create-a-reset-password-page",
+        "https://supabase.com/docs/guides/auth/password-security#require-reauthentication-when-changing-password",
+        "https://supabase.com/docs/guides/auth/passwords#resetting-a-password",
+        "https://supabase.com/docs/guides/auth/passwords#step-2-create-a-change-password-page"
+      ],
+      "total_ms": 11692,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -861,16 +863,16 @@
         "https://supabase.com/docs/guides/database/prisma/prisma-troubleshooting"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 528,
+      "retrieve_ms": 521,
       "gold_rank": 1,
-      "answer": "In a serverless app, Prisma should use the **Transaction pooler** string (which uses port 6543) [1][2][4]. \n\nFor serverless or auto-scaling environments, the transaction pooler handles more connections than session mode or direct connections [1][4]. When using Prisma from a serverless environment, you should also append `?pgbouncer=true&connection_limit=1` to the connection string [2].",
+      "answer": "If you are using a serverless app, you should use the Transaction pooler string, which uses port 6543 [1][4]. For serverless or auto-scaling environments, you also need to change the data source URL to `DIRECT_URL` [1]. Additionally, when using Prisma from a serverless environment, you should append `?pgbouncer=true&connection_limit=1` to your connection string [2].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/database/prisma",
         "https://supabase.com/docs/guides/getting-started/quickstarts/redwoodjs#2-gather-database-connection-strings",
         "https://supabase.com/docs/guides/database/prisma/prisma-troubleshooting"
       ],
-      "total_ms": 1709,
+      "total_ms": 1650,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -887,14 +889,15 @@
         "https://supabase.com/docs/guides/functions/quickstart#step-4-send-a-test-request"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 650,
+      "retrieve_ms": 640,
       "gold_rank": 1,
-      "answer": "You can send emails from Edge Functions using the Resend API [1].",
+      "answer": "You can send emails from Edge Functions using the Resend API [1]. The dashboard also offers pre-built templates for sending emails [3].",
       "handoff": false,
       "cited": [
-        "https://supabase.com/docs/guides/functions/examples/send-emails"
+        "https://supabase.com/docs/guides/functions/examples/send-emails",
+        "https://supabase.com/docs/guides/functions/quickstart-dashboard#step-2-create-your-first-function"
       ],
-      "total_ms": 1808,
+      "total_ms": 1835,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -911,14 +914,16 @@
         "https://supabase.com/docs/guides/queues/api#pgmqpublicsendqueuename-message-sleepseconds"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 608,
+      "retrieve_ms": 609,
       "gold_rank": 1,
-      "answer": "To set up a message queue, navigate to the Supabase Queues Postgres Module under Integrations in the Dashboard and enable the `pgmq` extension [2]. \n\nOnce on the Queues page:\n1. Click the **Create queue** button [2].\n2. Name your queue (queue names can only be lowercase, and hyphens and underscores are permitted) [2].\n3. Select your Queue Type [2].\n4. We recommend leaving Row Level Security (RLS) enabled [2].",
+      "answer": "To set up a message queue, follow these steps:\n\n1. Navigate to the Supabase Queues Postgres Module under Integrations in the Dashboard and enable the `pgmq` extension (available in Postgres version 15.6.1.143 or later) [2].\n2. On the Queues page, click **Create queue** [2].\n3. Name your queue (queue names can only use lowercase, hyphens, and underscores) [2].\n4. Select your Queue Type and leave Row Level Security (RLS) enabled [2]. \n\nEvery new queue creates two tables in the `pgmq` schema: `pgmq.q_<queue_name>` (to store and process active messages) and `pgmq.a_<queue_name>` (to store archived messages) [2].\n\nYou can then add a message to your queue using the `pgmq_public.send` RPC function [1][5]:\n\n```javascript\nconst sendToQueue = async () => {\n  const result = await supabase.schema('pgmq_public').rpc('send', {\n    queue_name: 'foo',\n    message: { hello: 'world' },\n    sleep_seconds: 30,\n  })\n  console.log(result)\n}\n```",
       "handoff": false,
       "cited": [
-        "https://supabase.com/docs/guides/queues/quickstart#create-queues"
+        "https://supabase.com/docs/guides/queues/quickstart#enqueueing-and-dequeueing-messages",
+        "https://supabase.com/docs/guides/queues/quickstart#create-queues",
+        "https://supabase.com/docs/guides/queues/api#pgmqpublicsendqueuename-message-sleepseconds"
       ],
-      "total_ms": 2033,
+      "total_ms": 2251,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -935,14 +940,14 @@
         "https://supabase.com/docs/guides/getting-started/quickstarts/astrojs#10-start-the-app"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 536,
+      "retrieve_ms": 531,
       "gold_rank": null,
-      "answer": "To run the local Supabase stack for development, follow these steps using the Supabase CLI [4]:\n\n1. Install the Supabase CLI as a dev dependency in your repository:\n   ```bash\n   npm install supabase --save-dev\n   ```\n2. Initialize the local Supabase project:\n   ```bash\n   npx supabase init\n   ```\n3. Start the local Supabase stack:\n   ```bash\n   npx supabase start\n   ```\n4. You can then view your local Supabase instance at http://localhost:54323.",
+      "answer": "To start the local Supabase stack on your machine, use the following steps after installing the Supabase CLI:\n\n1. Install the Supabase CLI as a dev dependency in your repo: `npm install supabase --save-dev` [4]\n2. Initialize the local Supabase project: `npx supabase init` [4]\n3. Start the local Supabase stack: `npx supabase start` [4]\n4. View your local Supabase instance at http://localhost:54323 [4].\n\nIf your local development machine is connected to an untrusted public network, you should create a separate Docker network and bind to 127.0.0.1 before starting the stack to restrict access to your localhost machine:\n\n```bash\ndocker network create -o 'com.docker.network.bridge.host_binding_ipv4=127.0.0.1' local-network\nnpx supabase start --network-id local-network\n```\n[4]",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/local-development#quickstart"
       ],
-      "total_ms": 1729,
+      "total_ms": 2215,
       "facts_ok": true,
       "cited_gold": false
     },
@@ -959,14 +964,14 @@
         "https://supabase.com/docs/guides/local-development/seeding-your-database#splitting-up-your-seed-file"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 466,
+      "retrieve_ms": 549,
       "gold_rank": 1,
-      "answer": "To wipe your local database and recreate it from scratch with seed data, run the following commands [3]:\n\n```bash\nsupabase start\nsupabase db reset\n```\n\nThis destroys the local database, applies all migrations in order, and then runs your seed file (`seed.sql`) [3].",
+      "answer": "To wipe your local database and reload the seed data, run the following commands [3]:\n\n```bash\nsupabase start\nsupabase db reset\n```\n\nThe `db reset` command destroys the local database, recreates it from scratch, applies all migrations in order, and then runs your seed data [3].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/local-development/cli-workflows#step-6-verify"
       ],
-      "total_ms": 1430,
+      "total_ms": 1660,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -983,16 +988,17 @@
         "https://supabase.com/docs/guides/observability/automate-with-agents#run-a-prompt"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 427,
+      "retrieve_ms": 443,
       "gold_rank": 2,
-      "answer": "You can schedule a job to run every night (for example, at 3:00 AM) by using `cron.schedule` with SQL [1]:\n\n```sql\nselect cron.schedule(\n  'nightly-etl',\n  '0 3 * * *',\n  $$\n    insert into warehouse.analytics\n    select * from public.analytics\n    where ts > (now() - interval '1 DAY');\n  $$\n);\n```\n\nAlternatively, you can schedule a job via the Dashboard by going to the Jobs section, clicking `Create job`, entering your schedule using cron syntax or natural language, and inputting your SQL snippet [2][4].",
+      "answer": "To schedule a job to run every night, you can use `cron.schedule` with cron syntax [1][3]. \n\nFor example, to run a job daily at midnight (GMT) to clean up job run details, you can use the following SQL snippet [3]:\n\n```sql\nselect cron.schedule(\n  'job-run-details-cleanup', -- name of the cron job\n  '0 0 * * *', -- daily at midnight (GMT)\n  $$ delete from cron.job_run_details where end_time < now() - interval '7 days' $$\n);\n```\n\nAlternatively, you can schedule an ETL job to run every night at 3 AM [1]:\n\n```sql\nselect cron.schedule(\n  'nightly-etl',\n  '0 3 * * *',\n  $$\n    insert into warehouse.analytics\n    select * from public.analytics\n    where ts > (now() - interval '1 DAY');\n  $$\n);\n```\n\nYou can also schedule jobs via the Integrations -> Cron interface in the Supabase Dashboard by navigating to the Jobs section, clicking `Create job`, entering your schedule using cron syntax or natural language, and inputting your SQL snippet, database function, HTTP request, or Supabase Edge Function [2][4].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/database/extensions/wrappers/overview#batch-etl-with-wrappers",
         "https://supabase.com/docs/guides/cron/quickstart#schedule-a-job",
+        "https://supabase.com/docs/guides/cron/quickstart#clean-up-job-run-history",
         "https://supabase.com/docs/guides/cron"
       ],
-      "total_ms": 1912,
+      "total_ms": 1987,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -1009,14 +1015,14 @@
         "https://supabase.com/docs/guides/database/dbeaver"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 545,
+      "retrieve_ms": 743,
       "gold_rank": 1,
-      "answer": "To connect to your database with `psql`, use SSL to prevent snooping and man-in-the-middle attacks [1]. \n\n1. Download your SSL certificate from the Database Settings in your application's dashboard to a path like `/path/to/prod-supabase.cer` [1].\n2. Go to your project's **Connect** panel in the dashboard, copy the URL from the `Session pooler` section, and use the following connection string format [1]:\n\n```bash\npsql \"sslmode=verify-full sslrootcert=/path/to/prod-supabase.cer host=[CLOUD_PROVIDER]-0-[REGION].pooler.supabase.com dbname=postgres user=postgres.[PROJECT_REF]\"\n```",
+      "answer": "You should connect to your database using SSL whenever possible [1]. To connect with `psql`:\n\n1. Download your SSL certificate from Database Settings to `/path/to/prod-supabase.cer` [1].\n2. Go to the project **Connect** panel in your dashboard to obtain your connection info and Server root certificate [1].\n3. Copy the URL from the `Session pooler` section and use it with `psql` and the required SSL parameters [1]:\n\n```bash\npsql \"sslmode=verify-full sslrootcert=/path/to/prod-supabase.cer host=[CLOUD_PROVIDER]-0-[REGION].pooler.supabase.com dbname=postgres user=postgres.[PROJECT_REF]\"\n```",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/database/psql#connecting-with-ssl"
       ],
-      "total_ms": 1930,
+      "total_ms": 2595,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -1033,15 +1039,15 @@
         "https://supabase.com/docs/guides/getting-started/quickstarts/flutter#installing-agent-skills"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 543,
+      "retrieve_ms": 841,
       "gold_rank": 1,
-      "answer": "To use Supabase in a Flutter app, you need to install the `supabase_flutter` package [1][2]. \n\nAdd it as a dependency in your `pubspec.yaml` file [1][2]:\n```yaml\nsupabase_flutter: ^2.0.0\n```\nThen run `flutter pub get` to install the dependencies [1].",
+      "answer": "To use Supabase in Flutter, you need to install the `supabase_flutter` package [1][2]. \n\nYou can add it to your `pubspec.yaml` file by including this line [1][2]:\n```yaml\nsupabase_flutter: ^2.0.0\n```\nThen run `flutter pub get` to install it [1].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/getting-started/tutorials/with-flutter#initialize-a-flutter-app",
         "https://supabase.com/docs/guides/getting-started/quickstarts/flutter#5-install-the-supabase-client-library"
       ],
-      "total_ms": 1680,
+      "total_ms": 2423,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -1058,14 +1064,14 @@
         "https://supabase.com/docs/guides/platform/multi-factor-authentication#supported-authentication-factors"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 469,
+      "retrieve_ms": 1143,
       "gold_rank": 1,
-      "answer": "Yes, Supabase Auth can prevent the use of leaked passwords by using the open-source HaveIBeenPwned.org Pwned Passwords API to reject passwords known by malicious actors [1]. Note that leaked password protection is available on the Pro Plan and above [1].",
+      "answer": "Yes, Supabase Auth can prevent the use of leaked passwords by using the open-source HaveIBeenPwned.org Pwned Passwords API to reject passwords that have been leaked and are known by malicious actors [1]. This leaked password protection feature is available on the Pro Plan and above [1].",
       "handoff": false,
       "cited": [
         "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection"
       ],
-      "total_ms": 1509,
+      "total_ms": 1942,
       "facts_ok": true,
       "cited_gold": true
     },
@@ -1075,18 +1081,18 @@
       "answerable": false,
       "top_score": -11.26,
       "retrieved": [
-        "https://supabase.com/docs/guides/database/extensions/wrappers/shopify#location",
-        "https://supabase.com/docs/guides/database/full-text-search#understanding-weight-labels",
-        "https://supabase.com/docs/guides/database/full-text-search#practical-example-with-results",
+        "https://supabase.com/docs/guides/self-hosting/accessing-postgres#connect-through-supavisor",
         "https://supabase.com/docs/guides/platform/regions#general-regions",
-        "https://supabase.com/docs/guides/database/extensions/postgis"
+        "https://supabase.com/docs/guides/database/connecting-to-postgres",
+        "https://supabase.com/docs/guides/database/replication/pipelines-faq#what-destinations-are-supported",
+        "https://supabase.com/docs/guides/database/extensions/wrappers/infura#query-account-balance"
       ],
       "gate_handoff": true,
-      "retrieve_ms": 658,
+      "retrieve_ms": 659,
       "answer": "I couldn't find this in the docs, so I don't want to guess. I've flagged your question for the team, and someone will follow up.",
       "handoff": true,
       "cited": [],
-      "total_ms": 529
+      "total_ms": 577
     },
     {
       "id": "u02",
@@ -1101,14 +1107,11 @@
         "https://supabase.com/docs/guides/platform/credits#can-i-get-a-refund-of-my-unused-credits"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 279,
-      "answer": "No, we do not provide refunds [4][5].",
-      "handoff": false,
-      "cited": [
-        "https://supabase.com/docs/guides/platform/billing-faq#can-i-get-a-refund-of-my-unused-credits",
-        "https://supabase.com/docs/guides/platform/credits#can-i-get-a-refund-of-my-unused-credits"
-      ],
-      "total_ms": 1555
+      "retrieve_ms": 340,
+      "answer": "This is something our team needs to handle directly. I've passed your question on, and someone will get back to you.",
+      "handoff": true,
+      "cited": [],
+      "total_ms": 0
     },
     {
       "id": "u03",
@@ -1123,11 +1126,11 @@
         "https://supabase.com/docs/guides/platform/manage-your-subscription#credits-upon-downgrade"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 312,
+      "retrieve_ms": 415,
       "answer": "I couldn't find this in the docs, so I don't want to guess. I've flagged your question for the team, and someone will follow up.",
       "handoff": true,
       "cited": [],
-      "total_ms": 1223
+      "total_ms": 1371
     },
     {
       "id": "u04",
@@ -1139,14 +1142,14 @@
         "https://supabase.com/docs/guides/ai/examples/image-search-openai-clip#create-a-new-python-project-with-poetry",
         "https://supabase.com/docs/guides/ai/examples/semantic-image-search-amazon-titan#create-a-new-python-project-with-poetry",
         "https://supabase.com/docs/guides/ai/examples/image-search-openai-clip#setup-supabase-project",
-        "https://supabase.com/docs/guides/database/extensions/wrappers/notion#database"
+        "https://supabase.com/docs/guides/ai/examples/mixpeek-video-search#create-a-new-python-project-with-poetry"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 461,
+      "retrieve_ms": 612,
       "answer": "I couldn't find this in the docs, so I don't want to guess. I've flagged your question for the team, and someone will follow up.",
       "handoff": true,
       "cited": [],
-      "total_ms": 1604
+      "total_ms": 1832
     },
     {
       "id": "u05",
@@ -1157,34 +1160,34 @@
         "https://supabase.com/docs/guides/getting-started/quickstarts/ruby-on-rails#6-use-the-model-to-interact-with-the-database",
         "https://supabase.com/docs/guides/getting-started/quickstarts/ruby-on-rails#4-set-up-the-postgres-connection-details",
         "https://supabase.com/docs/guides/platform/ipv4-address#enabling-the-ipv4-add-on",
-        "https://supabase.com/docs/guides/deployment/terraform/tutorial#configuring-branches",
-        "https://supabase.com/docs/guides/getting-started/quickstarts/vue#9-start-the-app"
+        "https://supabase.com/docs/guides/self-hosting/self-hosted-auth-hooks#step-2-update-docker-composeyml",
+        "https://supabase.com/docs/guides/deployment/terraform/tutorial#configuring-branches"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 571,
+      "retrieve_ms": 644,
       "answer": "I couldn't find this in the docs, so I don't want to guess. I've flagged your question for the team, and someone will follow up.",
       "handoff": true,
       "cited": [],
-      "total_ms": 1370
+      "total_ms": 1874
     },
     {
       "id": "u06",
       "question": "When is Supabase going to IPO?",
       "answerable": false,
-      "top_score": 0.74,
+      "top_score": -1.68,
       "retrieved": [
-        "https://supabase.com/docs/guides/security/soc-2-compliance#frequently-asked-questions",
         "https://supabase.com/docs/guides/platform/billing-on-supabase#project-add-ons",
         "https://supabase.com/docs/guides/platform/aws-marketplace/getting-started#purchase-supabase-through-the-aws-marketplace",
         "https://supabase.com/docs/guides/auth/server-side#supabasessr",
-        "https://supabase.com/docs/guides/integrations/supabase-for-platforms"
+        "https://supabase.com/docs/guides/integrations/supabase-for-platforms",
+        "https://supabase.com/docs/guides/security"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 602,
+      "retrieve_ms": 768,
       "answer": "I couldn't find this in the docs, so I don't want to guess. I've flagged your question for the team, and someone will follow up.",
       "handoff": true,
       "cited": [],
-      "total_ms": 1574
+      "total_ms": 1929
     },
     {
       "id": "u07",
@@ -1194,16 +1197,16 @@
       "retrieved": [
         "https://supabase.com/docs/guides/platform/compute-and-disk#disk-types",
         "https://supabase.com/docs/guides/ai/going-to-prod#going-into-production",
+        "https://supabase.com/docs/guides/ai/google-colab#create-a-new-notebook",
         "https://supabase.com/docs/guides/platform/compute-and-disk#provisioned-disk-throughput-and-iops",
-        "https://supabase.com/docs/guides/realtime#what-can-you-build",
-        "https://supabase.com/docs/guides/platform/compute-and-disk#disk"
+        "https://supabase.com/docs/guides/realtime#what-can-you-build"
       ],
       "gate_handoff": true,
-      "retrieve_ms": 601,
+      "retrieve_ms": 973,
       "answer": "I couldn't find this in the docs, so I don't want to guess. I've flagged your question for the team, and someone will follow up.",
       "handoff": true,
       "cited": [],
-      "total_ms": 657
+      "total_ms": 786
     },
     {
       "id": "u08",
@@ -1218,11 +1221,68 @@
         "https://supabase.com/docs/guides/observability/automate-with-agents/health"
       ],
       "gate_handoff": false,
-      "retrieve_ms": 419,
+      "retrieve_ms": 1018,
       "answer": "I couldn't find this in the docs, so I don't want to guess. I've flagged your question for the team, and someone will follow up.",
       "handoff": true,
       "cited": [],
-      "total_ms": 1345
+      "total_ms": 1868
+    },
+    {
+      "id": "u09",
+      "question": "I was charged twice this month, can I get my money back?",
+      "answerable": false,
+      "top_score": -0.35,
+      "retrieved": [
+        "https://supabase.com/docs/guides/platform/your-monthly-invoice#billing-cycle",
+        "https://supabase.com/docs/guides/platform/billing-faq#when-are-payments-taken",
+        "https://supabase.com/docs/guides/platform/get-set-up-for-billing#alternatives-to-monthly-charges",
+        "https://supabase.com/docs/guides/platform/your-monthly-invoice#payment-failure",
+        "https://supabase.com/docs/guides/platform/manage-your-subscription#charges-on-downgrade"
+      ],
+      "gate_handoff": false,
+      "retrieve_ms": 579,
+      "answer": "This is something our team needs to handle directly. I've passed your question on, and someone will get back to you.",
+      "handoff": true,
+      "cited": [],
+      "total_ms": 0
+    },
+    {
+      "id": "u10",
+      "question": "How do I dispute a charge on my last invoice?",
+      "answerable": false,
+      "top_score": -1.0,
+      "retrieved": [
+        "https://supabase.com/docs/guides/database/extensions/wrappers/stripe#notes",
+        "https://supabase.com/docs/guides/database/extensions/wrappers/stripe#disputes",
+        "https://supabase.com/docs/guides/platform/aws-marketplace/invoices",
+        "https://supabase.com/docs/guides/platform/your-monthly-invoice#payment-failure",
+        "https://supabase.com/docs/guides/platform/billing-faq#where-can-i-check-my-credit-balance"
+      ],
+      "gate_handoff": false,
+      "retrieve_ms": 520,
+      "answer": "This is something our team needs to handle directly. I've passed your question on, and someone will get back to you.",
+      "handoff": true,
+      "cited": [],
+      "total_ms": 0
+    },
+    {
+      "id": "u11",
+      "question": "My account was suspended for no reason. Can you reactivate it?",
+      "answerable": false,
+      "top_score": -3.17,
+      "retrieved": [
+        "https://supabase.com/docs/guides/auth/managing-user-data#removing-account-access",
+        "https://supabase.com/docs/guides/auth/sessions#what-is-refresh-token-reuse-detection-and-what-does-it-protect-from",
+        "https://supabase.com/docs/guides/auth/oauth-server/oauth-flows#revoking-access",
+        "https://supabase.com/docs/guides/auth/server-side/advanced-guide#my-server-is-getting-invalid-refresh-token-errors-whats-going-on",
+        "https://supabase.com/docs/guides/auth/sessions#what-is-refresh-token-reuse-detection-and-what-does-it-protect-from"
+      ],
+      "gate_handoff": false,
+      "retrieve_ms": 762,
+      "answer": "I couldn't find this in the docs, so I don't want to guess. I've flagged your question for the team, and someone will follow up.",
+      "handoff": true,
+      "cited": [],
+      "total_ms": 2004
     }
   ]
 }

@@ -1,10 +1,14 @@
 """Retrieve, decide whether we can answer, then stream a cited answer.
 
-Two guards against made-up answers:
-1. If the best reranked source scores below MIN_RERANK_SCORE, nothing relevant was
+Three guards against wrong answers:
+1. Questions matching ESCALATE_PATTERN (refunds, disputes, legal) go to a human
+   before any search, because those need someone who can act on the account.
+2. If the best reranked source scores below MIN_RERANK_SCORE, nothing relevant was
    found, so we hand off without calling the LLM.
-2. The prompt tells the model to reply NO_ANSWER when the sources don't cover the
+3. The prompt tells the model to reply NO_ANSWER when the sources don't cover the
    question. The first tokens are held back until we know it isn't that marker.
+
+Every done event carries a `reason`: answered, escalated, no_sources, no_answer or error.
 """
 
 import re
@@ -28,6 +32,10 @@ HANDOFF_MESSAGE = (
     "I've flagged your question for the team, and someone will follow up."
 )
 BUSY_MESSAGE = "I'm getting a lot of questions right now. Please try again in a minute."
+ESCALATION_MESSAGE = (
+    "This is something our team needs to handle directly. "
+    "I've passed your question on, and someone will get back to you."
+)
 
 SYSTEM_PROMPT = """You are the support assistant for {product}. Answer the user's question using ONLY the numbered sources below.
 
@@ -37,6 +45,7 @@ Rules:
 - If the sources do not directly answer the question, reply with exactly {marker} and nothing else. Do not explain, apologize or answer from general knowledge.
 - After every sentence that uses a source, cite it with its number in square brackets, like [1] or [2][3].
 - Never invent API names, settings, limits or prices that are not in the sources.
+- Never state a rule more broadly than the source does. If a source covers only a specific case (one plan, one product, one kind of charge), say exactly which case it covers.
 - Be concise and practical. Include short code examples from the sources when they help.
 
 Sources:
@@ -87,6 +96,12 @@ def answer_stream(
     conn: psycopg.Connection, question: str, history: list[dict] | None = None
 ) -> Iterator[dict]:
     """Yield events: sources, then token*, then done."""
+    if should_escalate(question):
+        yield {"type": "sources", "sources": []}
+        yield {"type": "token", "text": ESCALATION_MESSAGE}
+        yield _done(ESCALATION_MESSAGE, [], "escalated", retrieve_ms=0, llm_ms=0)
+        return
+
     started = time.perf_counter()
     ranked = retrieve(conn, question)
     retrieve_ms = round((time.perf_counter() - started) * 1000)
@@ -94,7 +109,7 @@ def answer_stream(
     if not ranked:
         yield {"type": "sources", "sources": []}
         yield {"type": "token", "text": HANDOFF_MESSAGE}
-        yield _done(HANDOFF_MESSAGE, [], answered=False, retrieve_ms=retrieve_ms, llm_ms=0)
+        yield _done(HANDOFF_MESSAGE, [], "no_sources", retrieve_ms=retrieve_ms, llm_ms=0)
         return
 
     context, sources = build_context(ranked)
@@ -129,26 +144,32 @@ def answer_stream(
         # Rate limit or provider outage: the docs may well have the answer, so this is not a handoff.
         llm_ms = round((time.perf_counter() - llm_started) * 1000)
         yield {"type": "token", "text": ("\n\n" if released else "") + BUSY_MESSAGE}
-        yield {**_done(BUSY_MESSAGE, [], answered=False, retrieve_ms=retrieve_ms, llm_ms=llm_ms),
-               "handoff": False, "error": type(e).__name__}
+        yield {**_done(BUSY_MESSAGE, [], "error", retrieve_ms=retrieve_ms, llm_ms=llm_ms),
+               "error": type(e).__name__}
         return
     llm_ms = round((time.perf_counter() - llm_started) * 1000)
 
     if answer.strip().startswith(NO_ANSWER_MARKER):
         yield {"type": "token", "text": HANDOFF_MESSAGE}
-        yield _done(HANDOFF_MESSAGE, [], answered=False, retrieve_ms=retrieve_ms, llm_ms=llm_ms)
+        yield _done(HANDOFF_MESSAGE, [], "no_answer", retrieve_ms=retrieve_ms, llm_ms=llm_ms)
         return
     if not released and held:
         yield {"type": "token", "text": held}
-    yield _done(answer, cited_numbers(answer, len(sources)), answered=True, retrieve_ms=retrieve_ms, llm_ms=llm_ms)
+    yield _done(answer, cited_numbers(answer, len(sources)), "answered", retrieve_ms=retrieve_ms, llm_ms=llm_ms)
 
 
-def _done(answer: str, cited: list[int], answered: bool, retrieve_ms: int, llm_ms: int) -> dict:
+def should_escalate(question: str) -> bool:
+    return bool(config.ESCALATE_PATTERN) and re.search(config.ESCALATE_PATTERN, question, re.I) is not None
+
+
+def _done(answer: str, cited: list[int], reason: str, retrieve_ms: int, llm_ms: int) -> dict:
     return {
         "type": "done",
         "answer": answer,
         "cited": cited,
-        "answered": answered,
-        "handoff": not answered,
+        "answered": reason == "answered",
+        # An LLM error is not a docs gap, so it doesn't go to the team.
+        "handoff": reason in ("escalated", "no_sources", "no_answer"),
+        "reason": reason,
         "timings": {"retrieve_ms": retrieve_ms, "llm_ms": llm_ms},
     }
