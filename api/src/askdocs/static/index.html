@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>askdocs demo</title>
+  <meta name="description" content="A support chatbot that answers from the Supabase docs, cites the exact section, and hands off instead of guessing.">
+  <style>
+    :root { --bg: #fafafa; --fg: #111827; --muted: #6b7280; --card: #fff; --border: #e5e7eb; --accent: #2563eb; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #0b0f19; --fg: #f3f4f6; --muted: #9ca3af; --card: #111827; --border: #1f2937; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 56px 16px 120px; }
+    h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.02em; }
+    .lead { color: var(--muted); font-size: 18px; margin: 0 0 32px; }
+    h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 40px 0 12px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chips button { border: 1px solid var(--border); background: var(--card); color: var(--fg); border-radius: 999px; padding: 8px 14px;
+                    font: inherit; font-size: 14px; cursor: pointer; }
+    .chips button:hover { border-color: var(--accent); color: var(--accent); }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+    .stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    .stat b { display: block; font-size: 28px; letter-spacing: -0.02em; }
+    .stat span { color: var(--muted); font-size: 14px; }
+    ol { padding-left: 20px; } li { margin-bottom: 6px; }
+    code { font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--card); border: 1px solid var(--border); padding: 1px 6px; border-radius: 6px; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>A support chatbot that cites its sources and won't guess</h1>
+    <p class="lead">This demo answers questions from the 629 pages of the Supabase guides. Every answer links to the exact section it used. When the docs don't cover a question, or it's about money or legal matters, it hands off to a human instead of making something up.</p>
+
+    <h2>Try a question</h2>
+    <div class="chips">
+      <button type="button">What's the biggest file I can upload on the free plan?</button>
+      <button type="button">How do I stop users from reading each other's rows?</button>
+      <button type="button">Do you have a region in India?</button>
+      <button type="button">How do I add Sign in with Google?</button>
+      <button type="button">What's your refund policy?</button>
+      <button type="button">What's the capital of France?</button>
+    </div>
+
+    <h2>Measured, not hand-picked</h2>
+    <div class="stats">
+      <div class="stat"><b>95%</b><span>of 42 test questions answered correctly</span></div>
+      <div class="stat"><b>11 / 11</b><span>off-topic and billing questions handed off</span></div>
+      <div class="stat"><b>1.9 s</b><span>median time to a full answer</span></div>
+    </div>
+
+    <h2>How it works</h2>
+    <ol>
+      <li>Keyword and vector search run together, and a cross-encoder re-ranks the top 20 results.</li>
+      <li>Questions about refunds, disputes or legal matters go straight to a human.</li>
+      <li>If nothing relevant is found, or the model says the sources don't answer it, the question is handed off and logged.</li>
+      <li>Otherwise the answer streams in with numbered citations to the exact doc sections.</li>
+    </ol>
+
+    <h2>Add it to any site</h2>
+    <p><code>&lt;script src="…/widget.js" data-api="…" defer&gt;&lt;/script&gt;</code></p>
+    <p><a href="https://github.com/DecodeDebangi/askdocs">Source code and evaluation on GitHub</a></p>
+  </main>
+
+  <script src="/widget.js" defer data-title="Ask the Supabase docs"></script>
+  <script>
+    document.querySelectorAll(".chips button").forEach((b) =>
+      b.addEventListener("click", () => window.AskDocs && window.AskDocs.ask(b.textContent)));
+  </script>
+</body>
+</html>

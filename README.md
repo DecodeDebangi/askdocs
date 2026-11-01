@@ -4,7 +4,7 @@ A support chatbot that answers from your documentation, cites the exact section 
 
 The demo is trained on the [Supabase guides](https://supabase.com/docs/guides) (629 pages).
 
-> Status: crawl, indexing, hybrid search, reranking, the streaming chat API and a 50-question evaluation are done. The web widget, human handoff notifications and admin page are next.
+> Status: crawl, indexing, hybrid search, reranking, the streaming chat API, the embeddable widget and a 53-question evaluation are done. Deployment, human handoff notifications and an admin page are next.
 
 ## How it works
 
@@ -94,6 +94,19 @@ curl -X POST localhost:8000/chat -H 'content-type: application/json' \
 
 Both take `{"question": "...", "history": [{"role": "user", "content": "..."}]}`.
 
+### Chat widget
+
+Open http://localhost:8000 for the demo page. To add the chat to any website:
+
+```html
+<script src="https://YOUR-API/widget.js" defer
+        data-api="https://YOUR-API"
+        data-title="Ask the docs"
+        data-color="#2563eb"></script>
+```
+
+It's one dependency-free file in a Shadow DOM, so it works with any framework and the host page's CSS can't affect it. Answers stream in with numbered citations that link to the exact doc section, and model output is escaped before rendering. It follows the system light/dark setting and goes full-screen on phones. The page can also drive it: `AskDocs.open()` or `AskDocs.ask("question")`.
+
 ## Deploy
 
 Production uses [Neon](https://neon.com) (serverless Postgres, pgvector included). Put the Neon connection string in `DATABASE_URL` and run `askdocs ingest`; the schema is created automatically.
@@ -101,5 +114,5 @@ Production uses [Neon](https://neon.com) (serverless Postgres, pgvector included
 ## Tests
 
 ```bash
-cd api && uv run pytest
+cd api && uv run pytest && node --test tests/widget.test.js
 ```

@@ -1,11 +1,12 @@
 import json
 from collections.abc import Iterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from askdocs import db
@@ -47,6 +48,19 @@ def _events(req: ChatRequest) -> Iterator[dict]:
             if event["type"] == "done":
                 db.log_answer(conn, req.question, event)
             yield event
+
+
+STATIC = Path(__file__).parent / "static"
+
+
+@app.get("/", include_in_schema=False)
+def demo() -> FileResponse:
+    return FileResponse(STATIC / "index.html")
+
+
+@app.get("/widget.js", include_in_schema=False)
+def widget() -> FileResponse:
+    return FileResponse(STATIC / "widget.js", media_type="text/javascript", headers={"Cache-Control": "public, max-age=300"})
 
 
 @app.get("/health")
