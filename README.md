@@ -2,6 +2,8 @@
 
 A support chatbot that answers from your documentation, cites the exact section it used, and says "I don't know" instead of guessing.
 
+**Live demo: https://askdocs-e8kq.onrender.com** (free hosting: the first question after 15 idle minutes takes about a minute while the server wakes up).
+
 The demo is trained on the [Supabase guides](https://supabase.com/docs/guides) (629 pages).
 
 > Status: crawl, indexing, hybrid search, reranking, the streaming chat API, the embeddable widget and a 53-question evaluation are done. Human handoff notifications and an admin page are next.
