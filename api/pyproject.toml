@@ -14,6 +14,7 @@ dependencies = [
     "python-dotenv>=1.0",
     "trafilatura>=2.0",
     "uvicorn>=0.30",
+    "markdown>=3.11.2",
 ]
 
 [project.scripts]

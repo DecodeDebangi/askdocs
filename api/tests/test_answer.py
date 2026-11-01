@@ -92,7 +92,7 @@ def test_llm_error_shows_busy_message_without_handoff(monkeypatch):
 
 
 @pytest.mark.parametrize("question", [
-    "What's your refund policy?",
+    "I want to file a chargeback for my last order",
     "I was charged twice, can I get my money back?",
     "How do I dispute a charge on my invoice?",
 ])
@@ -106,8 +106,8 @@ def test_money_and_legal_questions_escalate_before_search(monkeypatch, question)
     assert done["reason"] == "escalated" and done["handoff"]
 
 
-@pytest.mark.parametrize("question", ["How do I cancel my subscription?", "How are credits applied to my invoice?"])
-def test_billing_how_to_questions_are_not_escalated(question):
+@pytest.mark.parametrize("question", ["How long do refunds take?", "What's your refund policy?", "How do I cancel my order?"])
+def test_policy_questions_are_not_escalated(question):
     assert not answer.should_escalate(question)
 
 

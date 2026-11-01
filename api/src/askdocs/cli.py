@@ -12,6 +12,15 @@ def cmd_crawl(args: argparse.Namespace) -> None:
     asyncio.run(crawl(args.sitemap, args.prefix, config.PAGES_DIR, args.limit, args.concurrency))
 
 
+def cmd_import_markdown(args: argparse.Namespace) -> None:
+    from pathlib import Path
+
+    from askdocs.helpcenter import import_markdown
+
+    n = import_markdown(Path(args.source), args.base_url, config.PAGES_DIR)
+    print(f"imported {n} pages into {config.PAGES_DIR}, cited as {args.base_url.rstrip('/')}/<slug>")
+
+
 def cmd_ingest(args: argparse.Namespace) -> None:
     from askdocs import db
     from askdocs.chunk import chunk_page
@@ -98,6 +107,11 @@ def main() -> None:
     p.add_argument("--limit", type=int, help="crawl at most N pages (for a quick test)")
     p.add_argument("--concurrency", type=int, default=6)
     p.set_defaults(func=cmd_crawl)
+
+    p = sub.add_parser("import-markdown", help="use a folder of Markdown files as the pages (instead of crawling)")
+    p.add_argument("source", nargs="?", default=str(config.HELP_DIR))
+    p.add_argument("--base-url", default=f"{config.PUBLIC_URL}/help")
+    p.set_defaults(func=cmd_import_markdown)
 
     p = sub.add_parser("ingest", help="chunk, embed and store crawled pages in Postgres")
     p.add_argument("--force", action="store_true", help="re-embed pages even if unchanged")

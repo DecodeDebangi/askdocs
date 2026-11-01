@@ -35,15 +35,20 @@ MIN_RERANK_SCORE = float(os.environ.get("MIN_RERANK_SCORE", "-6.0"))  # with RER
 MIN_SIMILARITY = float(os.environ.get("MIN_SIMILARITY", "0.0"))  # cosine, with RERANK=none
 # Source text sent to the LLM. 12k chars is ~3k tokens; use 7000 for a local 4k-token model.
 CONTEXT_CHARS = int(os.environ.get("CONTEXT_CHARS", "12000"))
-# Questions matching this go straight to a human: money and legal matters, where a
-# docs-based answer that is slightly off costs more than a short wait.
+# Questions matching this go straight to a human: disputes and legal matters, where a
+# docs-based answer that is slightly off costs more than a short wait. Set per deployment:
+# the Supabase docs demo also escalated "refund", but a store answers refund questions itself.
 ESCALATE_PATTERN = os.environ.get(
     "ESCALATE_PATTERN",
-    r"\brefund|\bchargeback|money back|charged twice|double.charged|\bdispute\b|\blawsuit|\blawyer|legal action",
+    r"\bchargeback|charged twice|double.charged|\bdispute|\bfraud|\blawsuit|\blawyer|legal action",
 )
 
 SITEMAP_URL = os.environ.get("SITEMAP_URL", "https://supabase.com/docs/sitemap.xml")
 URL_PREFIX = os.environ.get("URL_PREFIX", "https://supabase.com/docs/guides/")
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", Path(__file__).resolve().parents[2] / "data"))
+# Markdown help center served at /help (and imported with `askdocs import-markdown`).
+HELP_DIR = Path(os.environ.get("HELP_DIR", Path(__file__).resolve().parents[2] / "corpora" / "fernhollow"))
+# Public address of the deployed app; imported help pages are cited as PUBLIC_URL/help/<slug>.
+PUBLIC_URL = os.environ.get("PUBLIC_URL", "https://askdocs-e8kq.onrender.com").rstrip("/")
 PAGES_DIR = DATA_DIR / "pages"

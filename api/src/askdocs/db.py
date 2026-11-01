@@ -67,8 +67,11 @@ def pool() -> ConnectionPool:
     def configure(conn: psycopg.Connection) -> None:
         register_vector(conn)
 
+    # Neon suspends idle compute after a few minutes, which drops pooled connections.
+    # check_connection tests each one on checkout and replaces it if it's dead.
     return ConnectionPool(
-        DATABASE_URL, min_size=1, max_size=5, kwargs=CONNECT_KWARGS, configure=configure, open=True
+        DATABASE_URL, min_size=1, max_size=5, kwargs=CONNECT_KWARGS, configure=configure,
+        check=ConnectionPool.check_connection, open=True,
     )
 
 

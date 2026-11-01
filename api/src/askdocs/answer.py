@@ -1,7 +1,7 @@
 """Retrieve, decide whether we can answer, then stream a cited answer.
 
 Three guards against wrong answers:
-1. Questions matching ESCALATE_PATTERN (refunds, disputes, legal) go to a human
+1. Questions matching ESCALATE_PATTERN (disputes, chargebacks, legal) go to a human
    before any search, because those need someone who can act on the account.
 2. If no source scores at least min_score() (reranker score, or cosine similarity
    with RERANK=none), nothing relevant was found, so we hand off without calling the LLM.
@@ -30,7 +30,7 @@ MAX_SOURCES = 5 if config.RERANK == "local" else 8
 MAX_CONTEXT_CHARS = config.CONTEXT_CHARS
 NO_ANSWER_MARKER = "NO_ANSWER"
 HANDOFF_MESSAGE = (
-    "I couldn't find this in the docs, so I don't want to guess. "
+    "I couldn't find an answer to this, so I don't want to guess. "
     "I've flagged your question for the team, and someone will follow up."
 )
 BUSY_MESSAGE = "I'm getting a lot of questions right now. Please try again in a minute."
@@ -41,10 +41,12 @@ ESCALATION_MESSAGE = (
 
 SYSTEM_PROMPT = """You are the support assistant for {product}. Answer the user's question using ONLY the numbered sources below.
 
-The sources were found by an automatic search, so they may be about a different topic that only shares some words with the question. Questions about {product} the company (refunds, billing disputes, account problems, legal) are for the human support team.
+The sources were found by an automatic search, so they may be about a different topic that only shares some words with the question. Requests that need a person to look up or change a specific order, payment or account, billing disputes and legal matters are for the human support team. General policy questions (like how refunds work) are answered from the sources.
 
 Rules:
-- If the sources do not directly answer the question, reply with exactly {marker} and nothing else. Do not explain, apologize or answer from general knowledge.
+- If the sources do not contain the information needed to answer, reply with exactly {marker} and nothing else. Do not explain, apologize or answer from general knowledge.
+- A source that says something is not allowed, not available or not covered IS an answer: reply "No" and explain what the source says.
+- If the question names a specific case (a country, a store, a product) that a source's general rule covers, apply the rule and say which rule you applied. For example, "we only ship to Canada and the UK" answers "do you ship to Brazil?".
 - After every sentence that uses a source, cite it with its number in square brackets, like [1] or [2][3].
 - Never invent API names, settings, limits or prices that are not in the sources.
 - Never state a rule more broadly than the source does. If a source covers only a specific case (one plan, one product, one kind of charge), say exactly which case it covers.

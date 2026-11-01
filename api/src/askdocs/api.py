@@ -4,12 +4,12 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
-from askdocs import config, db
+from askdocs import config, db, helpcenter
 from askdocs.answer import answer_stream
 from askdocs.embed import embed_query
 
@@ -63,6 +63,19 @@ def demo() -> FileResponse:
 @app.get("/widget.js", include_in_schema=False)
 def widget() -> FileResponse:
     return FileResponse(STATIC / "widget.js", media_type="text/javascript", headers={"Cache-Control": "public, max-age=300"})
+
+
+@app.get("/help", include_in_schema=False)
+def help_index() -> HTMLResponse:
+    return HTMLResponse(helpcenter.index_html())
+
+
+@app.get("/help/{slug}", include_in_schema=False)
+def help_page(slug: str) -> HTMLResponse:
+    html = helpcenter.page_html(slug)
+    if html is None:
+        raise HTTPException(404, "No such help page")
+    return HTMLResponse(html)
 
 
 @app.get("/health")

@@ -15,6 +15,7 @@ WORKDIR /app
 COPY api/pyproject.toml api/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY api/src ./src
+COPY api/corpora ./corpora
 RUN uv sync --frozen --no-dev
 
 # Bake the embedding model into the image: free hosts have no persistent disk, so it would
