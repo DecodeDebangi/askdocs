@@ -1,13 +1,13 @@
 # Local Postgres + pgvector for development. Production uses Neon (same SQL).
+# No password: the port is bound to 127.0.0.1, so only this machine can connect.
 services:
   db:
     image: pgvector/pgvector:pg17
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
       POSTGRES_DB: askdocs
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 

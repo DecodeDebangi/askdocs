@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DATABASE_URL = os.environ.get(
-    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5433/askdocs"
+    "DATABASE_URL", "postgresql://postgres@localhost:5433/askdocs"
 )
 
 # Local, free, 384-d. Runs on CPU in a few ms per query.
@@ -21,7 +21,7 @@ LLM_MODEL = os.environ.get("LLM_MODEL", "qwen2.5:7b")
 
 PRODUCT_NAME = os.environ.get("PRODUCT_NAME", "Supabase")
 # Below this reranker score the best source is unrelated, so we hand off instead of answering.
-MIN_RERANK_SCORE = float(os.environ.get("MIN_RERANK_SCORE", "-2.0"))
+MIN_RERANK_SCORE = float(os.environ.get("MIN_RERANK_SCORE", "-6.0"))
 
 SITEMAP_URL = os.environ.get("SITEMAP_URL", "https://supabase.com/docs/sitemap.xml")
 URL_PREFIX = os.environ.get("URL_PREFIX", "https://supabase.com/docs/guides/")
