@@ -47,7 +47,8 @@ def test_build_context_keeps_sources_after_a_short_chunk():
     assert [s.title for s in sources] == ["Storage", "Errors", "Buckets"]
 
 
-def test_build_context_stops_when_budget_is_spent():
+def test_build_context_stops_when_budget_is_spent(monkeypatch):
+    monkeypatch.setattr(answer, "MAX_CONTEXT_CHARS", 7000)
     big = [(hit(f"Page{i}", None, "x" * 3000), 1.0) for i in range(5)]
     context, sources = build_context(big)
     assert len(sources) == 3  # 3000 + 3000 + the last 1000 chars of the 7000 budget

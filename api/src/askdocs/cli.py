@@ -22,9 +22,27 @@ def cmd_ingest(args: argparse.Namespace) -> None:
         raise SystemExit("No pages found. Run `askdocs crawl` first.")
 
     conn = db.connect()
-    db.init_schema(conn)
+    db.init_schema(conn, reset=args.reset)
     started = time.perf_counter()
     updated = unchanged = total_chunks = 0
+
+    # Embed pages in groups of ~200 chunks: few API calls, and each group is saved
+    # before the next, so a quota stop loses at most one group. Re-running resumes.
+    group: list[list] = []
+
+    def flush() -> None:
+        nonlocal updated
+        if not group:
+            return
+        vectors = embed_passages([c.embed_text for chunks in group for c in chunks])
+        offset = 0
+        for chunks in group:
+            db.replace_page(conn, chunks, vectors[offset:offset + len(chunks)])
+            offset += len(chunks)
+        updated += len(group)
+        print(f"  {updated} pages embedded...")
+        group.clear()
+
     for page in pages:
         chunks = chunk_page(page)
         if not chunks:
@@ -33,10 +51,10 @@ def cmd_ingest(args: argparse.Namespace) -> None:
         if not args.force and db.stored_hash(conn, page["url"]) == db.page_hash(chunks):
             unchanged += 1
             continue
-        db.replace_page(conn, chunks, embed_passages([c.embed_text for c in chunks]))
-        updated += 1
-        if updated % 50 == 0:
-            print(f"  {updated} pages embedded...")
+        group.append(chunks)
+        if sum(map(len, group)) >= 200:
+            flush()
+    flush()
     removed = db.delete_missing(conn, {p["url"] for p in pages})
     print(
         f"{len(pages)} pages, {total_chunks} chunks: {updated} updated, {unchanged} unchanged, "
@@ -83,6 +101,7 @@ def main() -> None:
 
     p = sub.add_parser("ingest", help="chunk, embed and store crawled pages in Postgres")
     p.add_argument("--force", action="store_true", help="re-embed pages even if unchanged")
+    p.add_argument("--reset", action="store_true", help="drop and rebuild the index (needed when changing embedding size)")
     p.set_defaults(func=cmd_ingest)
 
     p = sub.add_parser("search", help="run a hybrid search from the terminal")

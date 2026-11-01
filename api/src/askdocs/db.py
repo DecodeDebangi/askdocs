@@ -6,7 +6,7 @@ from pgvector.psycopg import register_vector
 from psycopg_pool import ConnectionPool
 
 from askdocs.chunk import Chunk
-from askdocs.config import DATABASE_URL, EMBED_DIM
+from askdocs.config import DATABASE_URL, EMBED_DIM, EMBED_MODEL
 
 SCHEMA = f"""
 create extension if not exists vector;
@@ -51,8 +51,13 @@ alter table answers add column if not exists reason text;
 """
 
 
+# Neon's pooled endpoint is PgBouncer in transaction mode, where a server-side prepared
+# statement can land on a different backend. psycopg auto-prepares after 5 runs, so turn that off.
+CONNECT_KWARGS = {"autocommit": True, "prepare_threshold": None}
+
+
 def connect() -> psycopg.Connection:
-    conn = psycopg.connect(DATABASE_URL, autocommit=True)
+    conn = psycopg.connect(DATABASE_URL, **CONNECT_KWARGS)
     conn.execute("create extension if not exists vector")
     register_vector(conn)
     return conn
@@ -63,7 +68,7 @@ def pool() -> ConnectionPool:
         register_vector(conn)
 
     return ConnectionPool(
-        DATABASE_URL, min_size=1, max_size=5, kwargs={"autocommit": True}, configure=configure, open=True
+        DATABASE_URL, min_size=1, max_size=5, kwargs=CONNECT_KWARGS, configure=configure, open=True
     )
 
 
@@ -82,12 +87,23 @@ def log_answer(conn: psycopg.Connection, question: str, done: dict) -> None:
     )
 
 
-def init_schema(conn: psycopg.Connection) -> None:
+def init_schema(conn: psycopg.Connection, reset: bool = False) -> None:
+    if reset:
+        conn.execute("drop table if exists chunks")
+    stored = conn.execute(
+        "select atttypmod from pg_attribute where attrelid = to_regclass('chunks') and attname = 'embedding'"
+    ).fetchone()
+    if stored and stored[0] != EMBED_DIM:
+        raise SystemExit(
+            f"chunks.embedding has {stored[0]} dimensions but {EMBED_MODEL} gives {EMBED_DIM}. "
+            "Run `askdocs ingest --reset` to rebuild the index for this model."
+        )
     conn.execute(SCHEMA)
 
 
 def page_hash(chunks: list[Chunk]) -> str:
-    h = hashlib.sha1(chunks[0].title.encode())
+    # The model is part of the hash, so switching models re-embeds every page.
+    h = hashlib.sha1(f"{EMBED_MODEL}\x00{chunks[0].title}".encode())
     for c in chunks:
         h.update(f"{c.section}\x00{c.content}\x00".encode())
     return h.hexdigest()

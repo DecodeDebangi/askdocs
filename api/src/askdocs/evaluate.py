@@ -20,9 +20,7 @@ from urllib.parse import urldefrag
 import psycopg
 
 from askdocs import config
-from askdocs.answer import CANDIDATES, MAX_SOURCES, answer_stream
-from askdocs.rerank import rerank
-from askdocs.search import search
+from askdocs.answer import MAX_SOURCES, answer_stream, min_score, rank
 
 LLM_RETRIES = 4
 
@@ -55,7 +53,7 @@ def check_gold_pages(conn: psycopg.Connection, items: list[dict]) -> list[str]:
 def run_item(conn: psycopg.Connection, item: dict, retrieval_only: bool) -> dict:
     q = item["question"]
     started = time.perf_counter()
-    ranked = rerank(q, search(conn, q, CANDIDATES), MAX_SOURCES)
+    ranked = rank(conn, q)
     retrieve_ms = (time.perf_counter() - started) * 1000
     top_score = ranked[0][1] if ranked else float("-inf")
     result = {
@@ -64,7 +62,7 @@ def run_item(conn: psycopg.Connection, item: dict, retrieval_only: bool) -> dict
         "answerable": item["answerable"],
         "top_score": round(float(top_score), 2),
         "retrieved": [h.link for h, _ in ranked],
-        "gate_handoff": top_score < config.MIN_RERANK_SCORE,
+        "gate_handoff": top_score < min_score(),
         "retrieve_ms": round(retrieve_ms),
     }
     if item["answerable"]:
@@ -163,7 +161,9 @@ def _save(out: Path, results: list[dict], summary: dict | None, retrieval_only: 
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({
         "model": None if retrieval_only else config.LLM_MODEL,
-        "min_rerank_score": config.MIN_RERANK_SCORE,
+        "embed_model": config.EMBED_MODEL,
+        "rerank": config.RERANK,
+        "min_score": min_score(),
         "summary": summary,
         "results": results,
     }, indent=2))

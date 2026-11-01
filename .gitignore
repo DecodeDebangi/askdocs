@@ -5,3 +5,9 @@ __pycache__/
 api/data/
 node_modules/
 .next/
+
+# Agent tooling (Neon skills installed with `neon skills`)
+.claude/
+skills-lock.json
+.neon
+.mcp.json

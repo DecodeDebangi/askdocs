@@ -4,7 +4,7 @@ A support chatbot that answers from your documentation, cites the exact section 
 
 The demo is trained on the [Supabase guides](https://supabase.com/docs/guides) (629 pages).
 
-> Status: crawl, indexing, hybrid search, reranking, the streaming chat API, the embeddable widget and a 53-question evaluation are done. Deployment, human handoff notifications and an admin page are next.
+> Status: crawl, indexing, hybrid search, reranking, the streaming chat API, the embeddable widget and a 53-question evaluation are done. Human handoff notifications and an admin page are next.
 
 ## How it works
 
@@ -38,17 +38,19 @@ flowchart LR
 
 Measured on a hand-written set of 53 questions ([evals/supabase.jsonl](api/evals/supabase.jsonl)): 42 that the docs answer, each labelled with the pages that answer it and the facts a correct answer must contain, plus 11 the bot should refuse (off-topic, a prompt injection, refunds and disputed charges, a suspended account).
 
-| Metric | gemini-3.5-flash-lite |
-|---|---|
-| Answer accuracy (required facts present) | **95%** (40/42) |
-| Cited a page that answers the question | 90% (38/42) |
-| Questions it should refuse that were handed off | **100%** (11/11) |
-| Answerable questions wrongly handed off | 2% (1/42) |
-| Correct page in top 5 sources | 95% (40/42) |
-| Correct page ranked first | 71% (30/42) |
-| Response time p50 / p95 | 1.9 s / 3.1 s |
+Both setups use gemini-3.5-flash-lite for answers and bge-small embeddings. The hosted demo runs without the reranker, because the free host has a tenth of a CPU.
 
-Per-question results are in [runs/](api/runs/). Answers vary by a question or two between runs.
+| Metric | With reranker (local) | Without reranker (hosted demo) |
+|---|---|---|
+| Answer accuracy (required facts present) | **95%** (40/42) | **93%** (39/42) |
+| Cited a page that answers the question | 90% (38/42) | 90% (38/42) |
+| Questions it should refuse that were handed off | **100%** (11/11) | **100%** (11/11) |
+| Answerable questions wrongly handed off | 2% (1/42) | 5% (2/42) |
+| Correct page among the sources the LLM sees | 95% (top 5) | 95% (top 8) |
+| Correct page ranked first | 71% | 52% |
+| Response time p50 / p95 | 1.9 s / 3.1 s | 2.0 s / 4.8 s |
+
+Without the reranker the right page is ranked first far less often (52% vs 71%), but it is still among the 8 sources the LLM reads 95% of the time, and the LLM picks it out: accuracy drops by one question. Per-question results are in [runs/](api/runs/). Answers vary by a question or two between runs.
 
 How the numbers got here:
 1. **First run: 90%.** Building the eval found a bug that hand-testing hadn't: context assembly stopped at the first chunk shorter than 200 characters and dropped every source after it. Fixing it: **93%**.
@@ -109,7 +111,16 @@ It's one dependency-free file in a Shadow DOM, so it works with any framework an
 
 ## Deploy
 
-Production uses [Neon](https://neon.com) (serverless Postgres, pgvector included). Put the Neon connection string in `DATABASE_URL` and run `askdocs ingest`; the schema is created automatically.
+The demo runs on [Render](https://render.com)'s free plan with the database on [Neon](https://neon.com)'s free plan (Postgres with pgvector).
+
+1. Create a Neon project and copy its **direct** (unpooled) connection string. Load the index into it: `DATABASE_URL=<neon url> uv run askdocs ingest`, or copy an existing local index with `pg_dump`/`pg_restore`.
+2. On Render: New > Blueprint > this repo. [render.yaml](render.yaml) sets everything except two secrets, `DATABASE_URL` and `LLM_API_KEY`.
+
+What fitting the free plan took (0.1 CPU, 512 MB), all measured locally with `docker run --cpus 0.1 --memory 512m`:
+- **Memory.** With both models, reranking 20 passages in one batch went over 512 MB on the first question. Reranking in batches of 4 with at most 2 at a time kept 6 simultaneous questions at a 448 MB peak.
+- **CPU.** On 0.1 CPU, startup took 3 minutes and one search took over 4. Skipping the reranker (`RERANK=none`) and running the embedding model on one thread (`MODEL_THREADS=1`, since ONNX otherwise starts a thread per host core and they fight over the tenth of a CPU) brought search to ~1 s and peak memory to ~250 MB.
+- **Embedding APIs.** Hosted embeddings (`EMBED_PROVIDER=gemini`) would avoid the local model entirely, but Gemini's free tier embeds about 1,000 texts a day, and the index has 6,849 chunks. The option stays in the code for paid keys.
+- **Neon's pooler.** Restoring through the pooled endpoint leaked a `search_path` setting into later sessions, so the app uses the direct connection; one server needs at most 5 connections.
 
 ## Tests
 

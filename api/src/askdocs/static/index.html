@@ -44,14 +44,14 @@
 
     <h2>Measured, not hand-picked</h2>
     <div class="stats">
-      <div class="stat"><b>95%</b><span>of 42 test questions answered correctly</span></div>
+      <div class="stat"><b>93%</b><span>of 42 test questions answered correctly</span></div>
       <div class="stat"><b>11 / 11</b><span>off-topic and billing questions handed off</span></div>
-      <div class="stat"><b>1.9 s</b><span>median time to a full answer</span></div>
+      <div class="stat"><b>2 s</b><span>median time to a full answer</span></div>
     </div>
 
     <h2>How it works</h2>
     <ol>
-      <li>Keyword and vector search run together, and a cross-encoder re-ranks the top 20 results.</li>
+      <li>Keyword and vector search run together, and the model reads the top 8 results.</li>
       <li>Questions about refunds, disputes or legal matters go straight to a human.</li>
       <li>If nothing relevant is found, or the model says the sources don't answer it, the question is handed off and logged.</li>
       <li>Otherwise the answer streams in with numbered citations to the exact doc sections.</li>
@@ -59,7 +59,7 @@
 
     <h2>Add it to any site</h2>
     <p><code>&lt;script src="…/widget.js" data-api="…" defer&gt;&lt;/script&gt;</code></p>
-    <p><a href="https://github.com/DecodeDebangi/askdocs">Source code and evaluation on GitHub</a></p>
+    <p><a href="https://github.com/DecodeDebangi/askdocs">Source code and evaluation on GitHub</a>. Hosted on free plans, so the first question after a quiet spell can take about a minute while the server wakes up.</p>
   </main>
 
   <script src="/widget.js" defer data-title="Ask the Supabase docs"></script>

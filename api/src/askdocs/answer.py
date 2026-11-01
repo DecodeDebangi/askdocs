@@ -3,8 +3,8 @@
 Three guards against wrong answers:
 1. Questions matching ESCALATE_PATTERN (refunds, disputes, legal) go to a human
    before any search, because those need someone who can act on the account.
-2. If the best reranked source scores below MIN_RERANK_SCORE, nothing relevant was
-   found, so we hand off without calling the LLM.
+2. If no source scores at least min_score() (reranker score, or cosine similarity
+   with RERANK=none), nothing relevant was found, so we hand off without calling the LLM.
 3. The prompt tells the model to reply NO_ANSWER when the sources don't cover the
    question. The first tokens are held back until we know it isn't that marker.
 
@@ -17,6 +17,7 @@ from collections.abc import Iterator
 from dataclasses import asdict, dataclass
 
 import psycopg
+import httpx
 from openai import APIError, OpenAI
 
 from askdocs import config
@@ -24,8 +25,9 @@ from askdocs.rerank import rerank
 from askdocs.search import Hit, search
 
 CANDIDATES = 20
-MAX_SOURCES = 5
-MAX_CONTEXT_CHARS = 7000  # keeps prompt + answer inside a 4k-token local model
+# Without a reranker, hybrid search order is rougher, so the LLM gets more sources to pick from.
+MAX_SOURCES = 5 if config.RERANK == "local" else 8
+MAX_CONTEXT_CHARS = config.CONTEXT_CHARS
 NO_ANSWER_MARKER = "NO_ANSWER"
 HANDOFF_MESSAGE = (
     "I couldn't find this in the docs, so I don't want to guess. "
@@ -63,9 +65,20 @@ class Source:
     score: float
 
 
+def rank(conn: psycopg.Connection, question: str) -> list[tuple[Hit, float]]:
+    """Top sources with a relevance score: reranker score, or cosine similarity without one."""
+    hits = search(conn, question, CANDIDATES)
+    if config.RERANK == "local":
+        return rerank(question, hits, MAX_SOURCES)
+    return [(h, h.similarity) for h in hits[:MAX_SOURCES]]
+
+
+def min_score() -> float:
+    return config.MIN_RERANK_SCORE if config.RERANK == "local" else config.MIN_SIMILARITY
+
+
 def retrieve(conn: psycopg.Connection, question: str) -> list[tuple[Hit, float]]:
-    ranked = rerank(question, search(conn, question, CANDIDATES), MAX_SOURCES)
-    return [(h, s) for h, s in ranked if s >= config.MIN_RERANK_SCORE]
+    return [(h, s) for h, s in rank(conn, question) if s >= min_score()]
 
 
 def build_context(ranked: list[tuple[Hit, float]]) -> tuple[str, list[Source]]:
@@ -103,7 +116,13 @@ def answer_stream(
         return
 
     started = time.perf_counter()
-    ranked = retrieve(conn, question)
+    try:
+        ranked = retrieve(conn, question)
+    except httpx.HTTPError as e:  # embedding API rate limit or outage
+        yield {"type": "sources", "sources": []}
+        yield {"type": "token", "text": BUSY_MESSAGE}
+        yield {**_done(BUSY_MESSAGE, [], "error", retrieve_ms=0, llm_ms=0), "error": type(e).__name__}
+        return
     retrieve_ms = round((time.perf_counter() - started) * 1000)
 
     if not ranked:

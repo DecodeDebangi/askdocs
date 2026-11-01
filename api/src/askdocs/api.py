@@ -9,10 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
-from askdocs import db
+from askdocs import config, db
 from askdocs.answer import answer_stream
 from askdocs.embed import embed_query
-from askdocs.rerank import model as rerank_model
 
 
 class Message(BaseModel):
@@ -29,9 +28,12 @@ class ChatRequest(BaseModel):
 async def lifespan(app: FastAPI):
     app.state.pool = db.pool()
     db.init_logs(app.state.pool)
-    # Load both local models now, so the first user doesn't wait for them.
+    # Load local models (or open the embedding API connection) now, so the first user doesn't wait.
     embed_query("warm up")
-    rerank_model()
+    if config.RERANK == "local":
+        from askdocs.rerank import model as rerank_model
+
+        rerank_model()
     yield
     app.state.pool.close()
 
