@@ -124,7 +124,7 @@ def main() -> None:
     p.set_defaults(func=cmd_search)
 
     p = sub.add_parser("eval", help="score answers against a labelled question set")
-    p.add_argument("--set", default="evals/supabase.jsonl")
+    p.add_argument("--set", default="evals/fernhollow.jsonl", help="question set (evals/supabase.jsonl needs the Supabase index)")
     p.add_argument("--retrieval-only", action="store_true", help="skip the LLM; score search and the relevance gate")
     p.add_argument("--limit", type=int, help="only the first N questions")
     p.add_argument("--out", help="save per-question results as JSON, e.g. runs/qwen7b.json")

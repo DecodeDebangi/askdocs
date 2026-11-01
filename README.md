@@ -90,9 +90,9 @@ Remaining misses on the Supabase set (measured before the two prompt rules added
 - **Incomplete:** for a CORS error it says to handle preflight requests but doesn't show the headers.
 
 ```bash
-uv run askdocs eval --retrieval-only        # search and gate only, ~30 s, no LLM
+uv run askdocs eval --retrieval-only        # store questions: search and gate only, ~30 s, no LLM
 uv run askdocs eval --out runs/my-run.json  # full run; --resume continues after a rate limit
-uv run askdocs eval --set evals/fernhollow.jsonl --out runs/store.json  # with the store index (see below)
+uv run askdocs eval --set evals/supabase.jsonl --out runs/docs.json  # with the Supabase index (see below)
 ```
 
 ## Run it
