@@ -13,7 +13,7 @@ from collections.abc import Iterator
 from dataclasses import asdict, dataclass
 
 import psycopg
-from openai import OpenAI
+from openai import APIError, OpenAI
 
 from askdocs import config
 from askdocs.rerank import rerank
@@ -27,6 +27,7 @@ HANDOFF_MESSAGE = (
     "I couldn't find this in the docs, so I don't want to guess. "
     "I've flagged your question for the team, and someone will follow up."
 )
+BUSY_MESSAGE = "I'm getting a lot of questions right now. Please try again in a minute."
 
 SYSTEM_PROMPT = """You are the support assistant for {product}. Answer the user's question using ONLY the numbered sources below.
 
@@ -61,9 +62,10 @@ def retrieve(conn: psycopg.Connection, question: str) -> list[tuple[Hit, float]]
 def build_context(ranked: list[tuple[Hit, float]]) -> tuple[str, list[Source]]:
     blocks, sources, used = [], [], 0
     for hit, score in ranked:
-        text = hit.content[: max(0, MAX_CONTEXT_CHARS - used)]
-        if len(text) < 200 and sources:
+        remaining = MAX_CONTEXT_CHARS - used
+        if remaining < 200 and sources:
             break
+        text = hit.content[:remaining]
         n = len(sources) + 1
         where = hit.title if not hit.section else f"{hit.title} > {hit.section}"
         blocks.append(f"[{n}] {where}\n{text}")
@@ -77,7 +79,8 @@ def cited_numbers(answer: str, n_sources: int) -> list[int]:
 
 
 def llm() -> OpenAI:
-    return OpenAI(base_url=config.LLM_BASE_URL, api_key=config.LLM_API_KEY)
+    # Free tiers allow only a few requests per minute; the client backs off and retries on 429.
+    return OpenAI(base_url=config.LLM_BASE_URL, api_key=config.LLM_API_KEY, max_retries=6)
 
 
 def answer_stream(
@@ -103,24 +106,32 @@ def answer_stream(
     messages.append({"role": "user", "content": question})
 
     llm_started = time.perf_counter()
-    stream = llm().chat.completions.create(
-        model=config.LLM_MODEL, messages=messages, temperature=0.1, stream=True
-    )
     answer, held, released = "", "", False
-    for chunk in stream:
-        delta = chunk.choices[0].delta.content if chunk.choices else None
-        if not delta:
-            continue
-        answer += delta
-        if released:
-            yield {"type": "token", "text": delta}
-            continue
-        held += delta
-        stripped = held.lstrip()
-        if NO_ANSWER_MARKER.startswith(stripped) or stripped.startswith(NO_ANSWER_MARKER):
-            continue  # is (or might still become) the marker: never show it
-        released = True
-        yield {"type": "token", "text": held}
+    try:
+        stream = llm().chat.completions.create(
+            model=config.LLM_MODEL, messages=messages, temperature=0.1, stream=True
+        )
+        for chunk in stream:
+            delta = chunk.choices[0].delta.content if chunk.choices else None
+            if not delta:
+                continue
+            answer += delta
+            if released:
+                yield {"type": "token", "text": delta}
+                continue
+            held += delta
+            stripped = held.lstrip()
+            if NO_ANSWER_MARKER.startswith(stripped) or stripped.startswith(NO_ANSWER_MARKER):
+                continue  # is (or might still become) the marker: never show it
+            released = True
+            yield {"type": "token", "text": held}
+    except APIError as e:
+        # Rate limit or provider outage: the docs may well have the answer, so this is not a handoff.
+        llm_ms = round((time.perf_counter() - llm_started) * 1000)
+        yield {"type": "token", "text": ("\n\n" if released else "") + BUSY_MESSAGE}
+        yield {**_done(BUSY_MESSAGE, [], answered=False, retrieve_ms=retrieve_ms, llm_ms=llm_ms),
+               "handoff": False, "error": type(e).__name__}
+        return
     llm_ms = round((time.perf_counter() - llm_started) * 1000)
 
     if answer.strip().startswith(NO_ANSWER_MARKER):

@@ -41,6 +41,19 @@ def test_build_context_numbers_sources_and_links_to_section():
     assert sources[1].url == "https://docs.example.com/buckets"
 
 
+def test_build_context_keeps_sources_after_a_short_chunk():
+    short = (hit("Errors", "Code", "Function failed to load."), 4.0)
+    _, sources = build_context([RANKED[0], short, RANKED[1]])
+    assert [s.title for s in sources] == ["Storage", "Errors", "Buckets"]
+
+
+def test_build_context_stops_when_budget_is_spent():
+    big = [(hit(f"Page{i}", None, "x" * 3000), 1.0) for i in range(5)]
+    context, sources = build_context(big)
+    assert len(sources) == 3  # 3000 + 3000 + the last 1000 chars of the 7000 budget
+    assert len(context) < 7200
+
+
 def test_streams_answer_with_citations(monkeypatch):
     events, shown, done = run(monkeypatch, RANKED, ["The limit", " is 50 MB", " [1]."])
     assert [e["type"] for e in events][:2] == ["sources", "token"]
@@ -59,6 +72,22 @@ def test_model_no_answer_marker_is_never_shown(monkeypatch, tokens):
 def test_short_answer_that_looks_like_marker_prefix_is_still_shown(monkeypatch):
     _, shown, done = run(monkeypatch, RANKED, ["NO"])
     assert shown == "NO" and done["answered"]
+
+
+def test_llm_error_shows_busy_message_without_handoff(monkeypatch):
+    import httpx
+    from openai import RateLimitError
+
+    def rate_limited(**_):
+        resp = httpx.Response(429, request=httpx.Request("POST", "https://llm.example"))
+        raise RateLimitError("quota", response=resp, body=None)
+
+    monkeypatch.setattr(answer, "retrieve", lambda conn, q: RANKED)
+    monkeypatch.setattr(answer, "llm", lambda: SimpleNamespace(
+        chat=SimpleNamespace(completions=SimpleNamespace(create=rate_limited))))
+    done = list(answer_stream(None, "question"))[-1]
+    assert done["error"] == "RateLimitError"
+    assert not done["answered"] and not done["handoff"]
 
 
 def test_no_relevant_sources_hands_off_without_calling_llm(monkeypatch):

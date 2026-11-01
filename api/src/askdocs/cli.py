@@ -60,6 +60,16 @@ def cmd_search(args: argparse.Namespace) -> None:
         print()
 
 
+def cmd_eval(args: argparse.Namespace) -> None:
+    from pathlib import Path
+
+    from askdocs import db
+    from askdocs.evaluate import evaluate, load_set
+
+    items = load_set(Path(args.set))[: args.limit]
+    evaluate(db.connect(), items, args.retrieval_only, Path(args.out) if args.out else None, args.resume)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="askdocs")
     sub = parser.add_subparsers(required=True)
@@ -79,6 +89,14 @@ def main() -> None:
     p.add_argument("query")
     p.add_argument("-k", type=int, default=5)
     p.set_defaults(func=cmd_search)
+
+    p = sub.add_parser("eval", help="score answers against a labelled question set")
+    p.add_argument("--set", default="evals/supabase.jsonl")
+    p.add_argument("--retrieval-only", action="store_true", help="skip the LLM; score search and the relevance gate")
+    p.add_argument("--limit", type=int, help="only the first N questions")
+    p.add_argument("--out", help="save per-question results as JSON, e.g. runs/qwen7b.json")
+    p.add_argument("--resume", action="store_true", help="reuse results already saved in --out")
+    p.set_defaults(func=cmd_eval)
 
     args = parser.parse_args()
     args.func(args)
