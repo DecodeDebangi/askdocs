@@ -120,3 +120,15 @@ def test_no_relevant_sources_hands_off_without_calling_llm(monkeypatch):
     events = list(answer_stream(None, "what's the capital of France?"))
     assert events[0] == {"type": "sources", "sources": []}
     assert events[-1]["handoff"] and events[-1]["timings"]["llm_ms"] == 0
+
+
+def test_sources_travel_with_the_latest_question():
+    from askdocs.answer import build_messages
+
+    history = [{"role": "user", "content": "Can I return socks?"},
+               {"role": "assistant", "content": "Not once opened [1]."}]
+    messages = build_messages("Do you ship to India?", "[1] International shipping\nWe ship to Canada.", history)
+    assert "International shipping" not in messages[0]["content"]
+    assert messages[1:3] == [history[0], {"role": "assistant", "content": "Not once opened."}]
+    assert messages[-1]["content"].startswith("Sources:\n[1] International shipping")
+    assert messages[-1]["content"].endswith("Question: Do you ship to India?")

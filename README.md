@@ -4,6 +4,8 @@ A support chatbot that answers from your help center or docs, links to the exact
 
 **Live demo: https://askdocs-e8kq.onrender.com** (free hosting: the first question after 15 idle minutes takes about a minute while the server wakes up).
 
+![The chatbot answering a returns question and a shipping question with their sources, then passing a double-charge complaint straight to a person. The side panel shows the help-center sections it found, which it cited, and why it answered or handed off.](docs/demo.gif)
+
 The demo is an AI support assistant for **Fernhollow Outdoor Co., a fictional outdoor-gear store** whose 37-page help center ([api/corpora/fernhollow](api/corpora/fernhollow)) covers shipping, returns, sizing, care, warranty and rewards. The help center is served at [/help](https://askdocs-e8kq.onrender.com/help), so every citation opens a real page. The same engine was first built and evaluated on 629 pages of real technical documentation (the [Supabase guides](https://supabase.com/docs/guides)).
 
 > Status: crawling or Markdown import, indexing, hybrid search, reranking, the streaming chat API, the embeddable widget, a hosted demo and evaluations on two corpora are done. Human handoff notifications and an admin page are next.
@@ -60,6 +62,7 @@ How the numbers got here:
 2. **A content gap.** "Is a jacket I bought on Amazon covered by your warranty?" failed because that rule was only on the About page, so search found the warranty pages instead. The warranty page now states it, as a real help center would.
 3. **Specific cases of general rules.** "Do you ship to India?" was handed off although the page lists every country served. The prompt now tells the model to apply a general rule to a named case and say which rule it used. That was the last prompt change, to avoid tuning to these 64 questions.
 4. **Labels.** Two answers were correct but worded differently from their label ("No, expedited shipping isn't available to Hawaii" when the label expected a mention of Standard shipping, and a trade-in answer that gave the $50 credit but not the program's name); those labels now accept both. Result: **96%**.
+5. **Follow-up questions.** The eval asks each question on its own, but in the demo "Do you ship to India?" asked after another question was handed off 4 times in 5. The sources sat at the top of the system prompt, and the previous answer's citation numbers pointed into an older source list. The sources now travel in the message with the question they were found for, and old citation numbers are stripped from the history: 5 of 5 answered, with the same 96% on the eval set ([local run](api/runs/fernhollow-local-followup-fix.json)).
 
 Remaining misses: "Do you price match REI?" is handed off (the page says "we don't price-match other retailers", but the model won't apply it to REI), and a gift-return answer leaves out the gift receipt.
 

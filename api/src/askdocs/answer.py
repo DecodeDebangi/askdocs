@@ -39,7 +39,7 @@ ESCALATION_MESSAGE = (
     "I've passed your question on, and someone will get back to you."
 )
 
-SYSTEM_PROMPT = """You are the support assistant for {product}. Answer the user's question using ONLY the numbered sources below.
+SYSTEM_PROMPT = """You are the support assistant for {product}. Answer the user's latest question using ONLY the numbered sources sent with it. Earlier messages are context only: their sources are gone.
 
 The sources were found by an automatic search, so they may be about a different topic that only shares some words with the question. Requests that need a person to look up or change a specific order, payment or account, billing disputes and legal matters are for the human support team. General policy questions (like how refunds work) are answered from the sources.
 
@@ -50,10 +50,14 @@ Rules:
 - After every sentence that uses a source, cite it with its number in square brackets, like [1] or [2][3].
 - Never invent API names, settings, limits or prices that are not in the sources.
 - Never state a rule more broadly than the source does. If a source covers only a specific case (one plan, one product, one kind of charge), say exactly which case it covers.
-- Be concise and practical. Include short code examples from the sources when they help.
+- Be concise and practical. Include short code examples from the sources when they help."""
 
-Sources:
-{sources}"""
+# The sources travel with the question they were found for: put up front, before a
+# conversation, they lose out to it, and a small model starts replying NO_ANSWER.
+QUESTION_PROMPT = """Sources:
+{sources}
+
+Question: {question}"""
 
 _CITATION = re.compile(r"\[(\d+)\]")
 
@@ -136,10 +140,7 @@ def answer_stream(
     context, sources = build_context(ranked)
     yield {"type": "sources", "sources": [asdict(s) for s in sources]}
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT.format(
-        product=config.PRODUCT_NAME, marker=NO_ANSWER_MARKER, sources=context)}]
-    messages += (history or [])[-6:]
-    messages.append({"role": "user", "content": question})
+    messages = build_messages(question, context, history)
 
     llm_started = time.perf_counter()
     answer, held, released = "", "", False
@@ -177,6 +178,16 @@ def answer_stream(
     if not released and held:
         yield {"type": "token", "text": held}
     yield _done(answer, cited_numbers(answer, len(sources)), "answered", retrieve_ms=retrieve_ms, llm_ms=llm_ms)
+
+
+def build_messages(question: str, context: str, history: list[dict] | None = None) -> list[dict]:
+    messages = [{"role": "system", "content": SYSTEM_PROMPT.format(product=config.PRODUCT_NAME, marker=NO_ANSWER_MARKER)}]
+    for m in (history or [])[-6:]:
+        # Old citation numbers point into an earlier source list; left in, they get reused.
+        content = re.sub(r"\s*\[\d+\]", "", m["content"]) if m["role"] == "assistant" else m["content"]
+        messages.append({"role": m["role"], "content": content})
+    messages.append({"role": "user", "content": QUESTION_PROMPT.format(sources=context, question=question)})
+    return messages
 
 
 def should_escalate(question: str) -> bool:
