@@ -35,3 +35,23 @@ def test_page_html_rejects_unknown_and_unsafe_slugs():
     assert helpcenter.page_html("../../etc/passwd") is None
     assert helpcenter.page_html("no-such-page") is None
     assert "Return policy" in helpcenter.page_html("return-policy")
+
+
+def test_showcase_source_links_point_at_real_sections():
+    for group in helpcenter.site()["showcase"]["groups"]:
+        for item in group["items"]:
+            if "source" not in item:
+                continue
+            slug, _, anchor = item["source"].partition("#")
+            html = helpcenter.page_html(slug)
+            assert html is not None, item["source"]
+            assert not anchor or f'id="{anchor}"' in html, item["source"]
+
+
+def test_product_page_fills_every_placeholder():
+    from askdocs.api import STATIC
+
+    html = helpcenter.product_html((STATIC / "about.html").read_text())
+    assert "{{" not in html and "<!--DEMO-QUESTIONS-->" not in html
+    assert 'data-target="#chat"' in html
+    assert html.count('class="dq"') == sum(len(g["items"]) for g in helpcenter.site()["showcase"]["groups"])

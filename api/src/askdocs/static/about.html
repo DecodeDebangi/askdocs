@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>askdocs · AI support that cites its sources</title>
+  <meta name="description" content="An AI support assistant that answers from your help center, links every answer to its source, and hands anything uncertain to your team.">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="/assets/site.css">
+  <style>
+    .hero2 { padding: 80px 0 72px; background: radial-gradient(900px 420px at 85% 10%, var(--brand-soft), transparent 70%), var(--bg); border-bottom: 1px solid var(--line); }
+    .hero2 .wrap { display: grid; grid-template-columns: 1.05fr .95fr; gap: 56px; align-items: center; }
+    @media (max-width: 940px) { .hero2 .wrap { grid-template-columns: 1fr; } .hero2 { padding: 48px 0; } }
+    .pill { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--brand-ink); background: var(--brand-soft); border-radius: 999px; padding: 5px 12px; margin-bottom: 18px; }
+    .pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--brand); }
+    .hero2 h1 { font: 600 clamp(36px, 5.4vw, 58px)/1.04 var(--serif); letter-spacing: -.02em; margin: 0 0 18px; }
+    .hero2 .sub { font-size: 19px; color: var(--ink-2); margin: 0 0 28px; max-width: 540px; }
+    .ctas { display: flex; flex-wrap: wrap; gap: 10px; }
+    .ctas .btn { padding: 13px 20px; font-size: 16px; }
+    .site-nav .btn-primary, .site-nav .btn-primary:hover { color: var(--on-brand); }
+    .hero-points { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+    .hero-points li { background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; color: var(--muted); font-size: 15px; box-shadow: var(--shadow); }
+    .hero-points b { display: block; font: 600 30px/1.1 var(--serif); color: var(--ink); margin-bottom: 4px; }
+    .demo-head { padding-top: 56px; margin-bottom: 22px; }
+    .demo-head h2 { font: 600 clamp(28px, 4vw, 38px)/1.15 var(--serif); margin: 0 0 14px; }
+
+    .demo { padding: 8px 0 72px; border-bottom: 1px solid var(--line); background: linear-gradient(var(--bg), var(--bg-soft)); }
+    .wrap { max-width: 1260px; }
+    .demo-grid { display: grid; grid-template-columns: 270px minmax(0, 1fr) 320px; gap: 18px; align-items: stretch; }
+    .demo-grid > * { min-width: 0; }
+    .chat-box { height: 640px; border-radius: 18px; box-shadow: var(--shadow-lg); }
+    .side { background: var(--bg); border: 1px solid var(--line); border-radius: 18px; padding: 18px; height: 640px; overflow-y: auto; }
+    .side > h2 { font: 600 13px var(--sans); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 4px; }
+    .side > p { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+    .dq-group h3 { font-size: 13px; font-weight: 600; color: var(--brand); margin: 14px 0 6px; }
+    .dq-group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+    .dq { width: 100%; text-align: left; font: 500 14px/1.4 var(--sans); color: var(--ink); background: var(--bg-soft); border: 1px solid transparent; border-radius: 10px; padding: 9px 11px; cursor: pointer; }
+    .dq:hover { border-color: var(--brand); }
+    .dq.active { border-color: var(--brand); background: var(--brand-soft); }
+    .trace-empty { color: var(--muted); font-size: 14.5px; border: 1px dashed var(--line); border-radius: 12px; padding: 16px; }
+    .trace-empty ol { margin: 8px 0 0; padding-left: 18px; } .trace-empty li { margin: 4px 0; }
+    .t-q { font-weight: 600; margin: 0 0 12px; }
+    .outcome { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 12px; margin-bottom: 14px; font-size: 14px; }
+    .outcome b { display: block; font-size: 14.5px; }
+    .outcome .dot { flex: none; width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; }
+    .outcome.ok { background: var(--brand-soft); } .outcome.ok .dot { background: var(--brand); }
+    .outcome.stop { background: color-mix(in srgb, var(--amber) 14%, var(--bg)); } .outcome.stop .dot { background: var(--amber); }
+    .t-h { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 16px 0 8px; }
+    .hits { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+    .hit { font-size: 13.5px; }
+    .hit a { color: var(--ink); text-decoration: none; display: flex; justify-content: space-between; gap: 8px; }
+    .hit a:hover span:first-child { text-decoration: underline; }
+    .hit .tag { flex: none; font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 1px 6px; color: var(--muted); background: var(--bg-soft); }
+    .hit.cited .tag { color: var(--on-brand); background: var(--brand); }
+    .bar { height: 5px; border-radius: 3px; background: var(--bg-sunk); margin-top: 5px; overflow: hidden; }
+    .bar i { display: block; height: 100%; background: var(--muted); opacity: .5; }
+    .hit.cited .bar i { background: var(--brand); opacity: 1; }
+    .times { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .times div { background: var(--bg-soft); border-radius: 10px; padding: 8px 10px; font-size: 12.5px; color: var(--muted); }
+    .times b { display: block; font-size: 16px; color: var(--ink); }
+    .expected { border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 14px; }
+    .expected a { display: inline-block; margin-top: 6px; font-weight: 600; }
+    @media (max-width: 1180px) {
+      .demo-grid { grid-template-columns: 1fr 1fr; }
+      .chat-wrap { grid-column: 1 / -1; order: -1; }
+      .side { height: auto; max-height: 560px; }
+    }
+    @media (max-width: 720px) {
+      .demo-grid { grid-template-columns: 1fr; }
+      .chat-box { height: min(600px, 82vh); }
+      .side { max-height: none; }
+    }
+
+    .stats2 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--bg); }
+    .stats2 div { padding: 24px 22px; border-right: 1px solid var(--line); }
+    .stats2 div:last-child { border-right: 0; }
+    .stats2 b { display: block; font: 600 34px/1.1 var(--serif); letter-spacing: -.02em; margin-bottom: 6px; }
+    .stats2 span { color: var(--muted); font-size: 14px; }
+    @media (max-width: 820px) { .stats2 { grid-template-columns: 1fr 1fr; } .stats2 div:nth-child(2) { border-right: 0; } .stats2 div:nth-child(-n+2) { border-bottom: 1px solid var(--line); } }
+    .caption { color: var(--muted); font-size: 14px; margin: 12px 0 0; }
+
+    .features { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .feature { padding: 24px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+    .feature .icon { width: 40px; height: 40px; border-radius: 11px; background: var(--brand-soft); color: var(--brand); display: grid; place-items: center; margin-bottom: 14px; }
+    .feature h3 { margin: 0 0 6px; font-size: 17px; }
+    .feature p { margin: 0; color: var(--muted); font-size: 15px; }
+    .lede { color: var(--muted); font-size: 17px; margin: -8px 0 28px; max-width: 640px; }
+
+    .steps { counter-reset: s; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; list-style: none; padding: 0; margin: 0; }
+    .steps li { counter-increment: s; padding: 22px; border-radius: var(--radius); background: var(--bg); border: 1px solid var(--line); }
+    .steps li::before { content: counter(s); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--brand); color: var(--on-brand); font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+    .steps h3 { margin: 0 0 4px; font-size: 16px; } .steps p { margin: 0; color: var(--muted); font-size: 15px; }
+
+    .tech { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+    @media (max-width: 820px) { .tech { grid-template-columns: 1fr; } }
+    .tech ul { margin: 0; padding-left: 18px; color: var(--ink-2); } .tech li { margin: 8px 0; }
+    .snippet { background: #111814; color: #d8e6dd; border-radius: var(--radius); padding: 18px 20px; font: 13.5px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-x: auto; }
+    .snippet .k { color: #8fd3ad; } .snippet .s { color: #e8c38d; }
+    .cta-band { text-align: center; padding: 72px 0; background: var(--bg-soft); border-top: 1px solid var(--line); }
+    .cta-band h2 { font: 600 clamp(28px, 4vw, 38px)/1.15 var(--serif); margin: 0 0 12px; }
+    .cta-band p { color: var(--muted); margin: 0 0 24px; font-size: 17px; }
+    .cta-band .ctas { justify-content: center; }
+  </style>
+</head>
+<body>
+  <header class="site-header"><div class="wrap">
+    <a class="logo" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 12h7M12 8.5v7"/></svg><b style="letter-spacing:.02em;font-size:17px">askdocs</b></a>
+    <nav class="site-nav"><a href="#how">How it works</a><a href="#results">Results</a><a href="https://github.com/DecodeDebangi/askdocs">GitHub</a><a href="/help">Store demo</a><a class="btn btn-primary" href="#demo" style="padding:7px 14px">Try it</a></nav>
+  </div></header>
+
+  <main>
+    <section class="hero2"><div class="wrap">
+      <div>
+        <div class="pill"><i></i>Live: ask it anything below</div>
+        <h1>An AI support chatbot that cites its sources and never guesses.</h1>
+        <p class="sub">It answers from your own help center, links every answer to the exact policy it came from, and hands anything it isn't sure about to your team.</p>
+        <div class="ctas">
+          <a class="btn btn-primary" href="#demo">Try the chatbot ↓</a>
+          <a class="btn btn-ghost" href="/help">See it on a store help center</a>
+        </div>
+      </div>
+      <ul class="hero-points">
+        <li><b>96%</b> correct on 54 written test questions, every answer cited</li>
+        <li><b>10 / 10</b> off-topic and billing-dispute questions refused or handed to a person</li>
+        <li><b>1.9 s</b> median time to a complete answer</li>
+      </ul>
+    </div></section>
+
+    <section class="demo" id="demo"><div class="wrap">
+      <div class="demo-head">
+        <h2>Try to catch it out</h2>
+        <p class="lede">This is the real chatbot, answering from the help center of Fernhollow, a fictional outdoor-gear store. Pick a test question or type your own, then see exactly how it reached the answer.</p>
+      </div>
+      <div class="demo-grid">
+        <aside class="side" aria-label="Test questions">
+          <h2>Test questions</h2>
+          <p>Each one checks a different way chatbots usually go wrong.</p>
+          <!--DEMO-QUESTIONS-->
+        </aside>
+        <div class="chat-wrap"><div class="chat-box" id="chat"></div></div>
+        <aside class="side" aria-label="How it answered" aria-live="polite">
+          <h2>How it answered</h2>
+          <div id="trace">
+            <div class="trace-empty">Ask a question to see, step by step:
+              <ol><li>which help-center sections it found, and how closely each matched</li><li>which ones it actually used and cited</li><li>why it answered, refused or passed to a person</li><li>how long it took</li></ol>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div></section>
+
+    <section class="section" id="results"><div class="wrap">
+      <h2>Measured, not hand-picked</h2>
+      <p class="lede">Every change is checked against 64 written test questions: 54 a shopper might ask, and 10 it should refuse or pass on.</p>
+      <div class="stats2">
+        <div><b>96%</b><span>of shopper questions answered correctly, with the source linked</span></div>
+        <div><b>10 / 10</b><span>off-topic, competitor and billing-dispute questions handed off</span></div>
+        <div><b>1.9 s</b><span>median time to a complete answer</span></div>
+        <div><b>93%</b><span>on a second test: 629 pages of real technical documentation</span></div>
+      </div>
+    </div></section>
+
+    <section class="section" style="padding-top:8px"><div class="wrap">
+      <h2>Built for the questions that matter</h2>
+      <p class="lede">Most chatbots sound confident even when they're wrong. This one is designed around not being wrong.</p>
+      <div class="features">
+        <div class="feature"><div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></div><h3>Every answer has a source</h3><p>Numbered citations link to the exact section of your help center, so customers (and your team) can check it.</p></div>
+        <div class="feature"><div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div><h3>Knows when to hand off</h3><p>Disputes, chargebacks and legal questions go straight to a person. Questions your help center doesn't cover get flagged, not guessed.</p></div>
+        <div class="feature"><div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg></div><h3>Tested like software</h3><p>A labelled question set scores accuracy, citations and hand-offs on every change, so improvements are measured.</p></div>
+        <div class="feature"><div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 9-4 3 4 3M16 9l4 3-4 3M13.5 6l-3 12"/></svg></div><h3>One line to install</h3><p>A single script tag adds the chat to any site, in your brand color, without touching your theme.</p></div>
+        <div class="feature"><div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg></div><h3>Uses the content you already have</h3><p>Learns from your existing help center or docs (Shopify, WordPress, Zendesk, Notion or any website), and stays in sync when they change.</p></div>
+        <div class="feature"><div class="icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M11 8v3l2 1"/></svg></div><h3>Shows you the gaps</h3><p>Every question is logged with its outcome, so you can see what customers ask and which answers your help center is missing.</p></div>
+      </div>
+    </div></section>
+
+    <section class="section" id="how" style="background:var(--bg-soft);border-top:1px solid var(--line);border-bottom:1px solid var(--line)"><div class="wrap">
+      <h2>How it works</h2>
+      <ol class="steps">
+        <li><h3>Index your help center</h3><p>Pages are split by heading and indexed for both keyword and meaning-based search.</p></li>
+        <li><h3>Find the right sections</h3><p>Each question pulls the most relevant sections in well under a second.</p></li>
+        <li><h3>Answer only from them</h3><p>The AI writes a short answer using only those sections, citing each one.</p></li>
+        <li><h3>Or hand it to a person</h3><p>Sensitive or uncovered questions are passed to your team and logged.</p></li>
+      </ol>
+    </div></section>
+
+    <section class="section"><div class="wrap tech">
+      <div>
+        <h2>Under the hood</h2>
+        <ul>
+          <li>Hybrid search: Postgres full-text and pgvector, merged with reciprocal rank fusion, with an optional cross-encoder reranker.</li>
+          <li>Works with Gemini, Claude, OpenAI or a local model through one setting.</li>
+          <li>Streaming answers, answer logging, rate-limit handling and an evaluation suite.</li>
+          <li>This demo runs on free hosting: about 250 MB of memory on a tenth of a CPU.</li>
+        </ul>
+      </div>
+      <div>
+        <h2>Add it to your site</h2>
+        <pre class="snippet"><span class="k">&lt;script</span> src=<span class="s">"https://your-api/widget.js"</span>
+        data-api=<span class="s">"https://your-api"</span>
+        data-title=<span class="s">"Acme Assistant"</span>
+        data-color=<span class="s">"#2d5a45"</span>
+        defer<span class="k">&gt;&lt;/script&gt;</span></pre>
+      </div>
+    </div></section>
+
+    <section class="cta-band"><div class="wrap">
+      <h2>See it where your customers would</h2>
+      <p>The same chatbot, installed with one script tag on a full store help center.</p>
+      <div class="ctas"><a class="btn btn-primary" href="/help">Open the store demo →</a><a class="btn btn-ghost" href="#demo">Back to the test questions</a></div>
+    </div></section>
+  </main>
+  <script src="/assets/demo.js" defer></script>
+  <script src="/widget.js" defer data-target="#chat"
+    data-title="{{ASSISTANT_TITLE}}" data-subtitle="{{ASSISTANT_SUBTITLE}}" data-color="{{ASSISTANT_COLOR}}"
+    data-greeting="{{ASSISTANT_GREETING}} Pick a test question, or type your own."></script>
+
+  <footer class="site-footer"><div class="wrap">
+    <div class="footer-note" style="border:0;margin:0;padding:0"><span>askdocs: FastAPI, Postgres + pgvector, Gemini.</span><a href="https://github.com/DecodeDebangi/askdocs">Source on GitHub</a></div>
+  </div></footer>
+</body>
+</html>

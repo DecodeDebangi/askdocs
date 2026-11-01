@@ -1,0 +1,221 @@
+{
+  "brand": "Fernhollow",
+  "tagline": "Outdoor clothing and gear, made in Portland",
+  "assistant": {
+    "title": "Fernhollow Assistant",
+    "subtitle": "Answers from our help center",
+    "color": "#2d5a45",
+    "greeting": "Hi! I can help with orders, shipping, returns, sizing and gear care. What can I help you with?",
+    "suggestions": [
+      "How much is overnight shipping?",
+      "Can I return socks?",
+      "Do you ship to India?"
+    ]
+  },
+  "nav": [
+    {
+      "label": "Order status",
+      "slug": "order-status-and-tracking"
+    },
+    {
+      "label": "Returns",
+      "slug": "how-to-start-a-return"
+    },
+    {
+      "label": "Contact us",
+      "slug": "contact-us"
+    }
+  ],
+  "popular": [
+    "shipping-options-and-costs",
+    "return-policy",
+    "order-status-and-tracking",
+    "size-guide-jackets",
+    "refunds",
+    "warranty"
+  ],
+  "categories": [
+    {
+      "id": "orders",
+      "name": "Orders & payment",
+      "icon": "bag",
+      "description": "Placing, changing and paying for orders",
+      "pages": [
+        "placing-an-order",
+        "payment-methods",
+        "order-changes-and-cancellations",
+        "order-status-and-tracking",
+        "promo-codes",
+        "price-adjustments",
+        "backorders-and-pre-orders"
+      ]
+    },
+    {
+      "id": "shipping",
+      "name": "Shipping & delivery",
+      "icon": "truck",
+      "description": "Costs, delivery times and international orders",
+      "pages": [
+        "shipping-options-and-costs",
+        "international-shipping",
+        "shipping-restrictions",
+        "lost-or-damaged-packages",
+        "buy-online-pick-up-in-store"
+      ]
+    },
+    {
+      "id": "returns",
+      "name": "Returns & refunds",
+      "icon": "return",
+      "description": "Return windows, exchanges and refund timing",
+      "pages": [
+        "return-policy",
+        "how-to-start-a-return",
+        "exchanges",
+        "refunds",
+        "international-returns",
+        "returning-a-gift"
+      ]
+    },
+    {
+      "id": "sizing",
+      "name": "Size guides",
+      "icon": "ruler",
+      "description": "Find your fit in jackets, boots and packs",
+      "pages": [
+        "size-guide-jackets",
+        "size-guide-footwear",
+        "size-guide-packs"
+      ]
+    },
+    {
+      "id": "care",
+      "name": "Product care",
+      "icon": "drop",
+      "description": "Washing, drying and looking after your gear",
+      "pages": [
+        "product-care-down-jackets",
+        "product-care-waterproof-shells",
+        "product-care-boots",
+        "materials-and-sustainability"
+      ]
+    },
+    {
+      "id": "warranty",
+      "name": "Warranty & repairs",
+      "icon": "shield",
+      "description": "The Fernhollow Promise and our repair service",
+      "pages": [
+        "warranty",
+        "warranty-claims",
+        "repairs"
+      ]
+    },
+    {
+      "id": "rewards",
+      "name": "Rewards & gift cards",
+      "icon": "gift",
+      "description": "Trailhead Rewards, gift cards and discounts",
+      "pages": [
+        "trailhead-rewards",
+        "gift-cards",
+        "discount-programs",
+        "newsletter"
+      ]
+    },
+    {
+      "id": "account",
+      "name": "Account & privacy",
+      "icon": "user",
+      "description": "Signing in, your details and your data",
+      "pages": [
+        "account-help",
+        "privacy-and-data"
+      ]
+    },
+    {
+      "id": "stores",
+      "name": "Stores & contact",
+      "icon": "pin",
+      "description": "Store hours, pickup and how to reach us",
+      "pages": [
+        "store-locations",
+        "contact-us",
+        "about-fernhollow"
+      ]
+    }
+  ],
+  "showcase": {
+    "title": "Put the assistant to the test",
+    "intro": "Every answer comes only from this help center, with the source linked. Pick a question, then check the answer against the page it cites.",
+    "groups": [
+      {
+        "name": "Exact facts",
+        "icon": "ruler",
+        "items": [
+          {
+            "q": "How much is overnight shipping?",
+            "expect": "$29.95",
+            "source": "shipping-options-and-costs#options"
+          },
+          {
+            "q": "If I order at 3pm today, will it ship today?",
+            "expect": "No: the same-day cut-off is 1 pm Pacific Time",
+            "source": "placing-an-order#when-your-order-ships"
+          }
+        ]
+      },
+      {
+        "name": "Policy edge cases",
+        "icon": "shield",
+        "items": [
+          {
+            "q": "Can I return socks?",
+            "expect": "Not once the package is opened, for hygiene reasons",
+            "source": "return-policy#final-sale-items"
+          },
+          {
+            "q": "Is a Fernhollow jacket I bought on Amazon covered by your warranty?",
+            "expect": "No: marketplace purchases from third-party sellers aren't covered",
+            "source": "warranty#where-you-bought-it"
+          }
+        ]
+      },
+      {
+        "name": "Applies the rules",
+        "icon": "search",
+        "items": [
+          {
+            "q": "My chest is 39 inches. What men's jacket size should I get?",
+            "expect": "M, which fits a 38–40 in chest",
+            "source": "size-guide-jackets#mens"
+          },
+          {
+            "q": "Can I use my reward certificate together with a promo code?",
+            "expect": "Yes: reward certificates aren't promo codes",
+            "source": "promo-codes#rules"
+          }
+        ]
+      },
+      {
+        "name": "Knows its limits",
+        "icon": "user",
+        "items": [
+          {
+            "q": "Do you ship to India?",
+            "expect": "No, and it lists the countries we do ship to",
+            "source": "international-shipping#where-we-ship"
+          },
+          {
+            "q": "Is the Cascade Down Jacket warmer than The North Face Nuptse?",
+            "expect": "Won't guess: the help center doesn't compare other brands"
+          },
+          {
+            "q": "I was charged twice for my order. Please fix it.",
+            "expect": "Passed straight to a person"
+          }
+        ]
+      }
+    ]
+  }
+}

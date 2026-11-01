@@ -6,7 +6,8 @@ from typing import Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from askdocs import config, db, helpcenter
@@ -55,9 +56,17 @@ def _events(req: ChatRequest) -> Iterator[dict]:
 STATIC = Path(__file__).parent / "static"
 
 
+app.mount("/assets", StaticFiles(directory=STATIC), name="assets")
+
+
 @app.get("/", include_in_schema=False)
-def demo() -> FileResponse:
-    return FileResponse(STATIC / "index.html")
+def home() -> HTMLResponse:
+    return HTMLResponse(helpcenter.product_html((STATIC / "about.html").read_text()))
+
+
+@app.get("/about", include_in_schema=False)
+def about() -> RedirectResponse:
+    return RedirectResponse("/", status_code=301)
 
 
 @app.get("/widget.js", include_in_schema=False)
@@ -67,7 +76,15 @@ def widget() -> FileResponse:
 
 @app.get("/help", include_in_schema=False)
 def help_index() -> HTMLResponse:
-    return HTMLResponse(helpcenter.index_html())
+    return HTMLResponse(helpcenter.home_html())
+
+
+@app.get("/help/topic/{topic_id}", include_in_schema=False)
+def help_topic(topic_id: str) -> HTMLResponse:
+    html = helpcenter.topic_html(topic_id)
+    if html is None:
+        raise HTTPException(404, "No such help topic")
+    return HTMLResponse(html)
 
 
 @app.get("/help/{slug}", include_in_schema=False)
